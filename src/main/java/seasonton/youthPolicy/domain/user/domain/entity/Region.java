@@ -1,0 +1,19 @@
+package seasonton.youthPolicy.domain.user.domain.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import seasonton.youthPolicy.domain.model.entity.BaseEntity;
+
+@Entity
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Region extends BaseEntity {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(length = 50, nullable = false, unique = true)
+    private String RegionName;
+}
