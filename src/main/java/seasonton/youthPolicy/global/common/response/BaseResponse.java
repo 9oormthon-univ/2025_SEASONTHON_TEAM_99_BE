@@ -10,13 +10,13 @@ import seasonton.youthPolicy.global.error.code.status.SuccessStatus;
 
 @Getter
 @AllArgsConstructor
-@JsonPropertyOrder({"isSuccess", "code", "message", "result"})
+@JsonPropertyOrder({"isSuccess", "statusCode", "message", "result"})
 public class BaseResponse<T> {
 
     @JsonProperty("isSuccess")
     private final boolean isSuccess;
 
-    private final String code;
+    private final String statusCode;
     private final String message;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

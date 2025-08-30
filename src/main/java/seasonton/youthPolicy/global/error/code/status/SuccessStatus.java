@@ -11,6 +11,9 @@ public enum SuccessStatus {
     // Common
     OK(HttpStatus.OK, "COMMON_200", "성공입니다."),
 
+    // post
+    POST_CREATE_SUCCESS(HttpStatus.CREATED, "POST_201", "게시글이 성공적으로 생성되었습니다."),
+
     // test
     SUCCESS_TEST(HttpStatus.OK, "TEST_200", "테스트 완료");
 

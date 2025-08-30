@@ -15,7 +15,13 @@ public enum ErrorStatus {
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
 
     // test
-    ILLEGAL_ARGUMENT_INPUT(HttpStatus.BAD_REQUEST, "TEST4001", "음수는 입력할 수 없습니다.");
+    ILLEGAL_ARGUMENT_INPUT(HttpStatus.BAD_REQUEST, "TEST4001", "음수는 입력할 수 없습니다."),
+
+    // user
+    USER_NOT_FIND(HttpStatus.BAD_REQUEST, "USER_4001", "해당 유저를 찾을 수 없습니다."),
+
+    // S3
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "DOCUMENT4001", "파일 업로드에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
