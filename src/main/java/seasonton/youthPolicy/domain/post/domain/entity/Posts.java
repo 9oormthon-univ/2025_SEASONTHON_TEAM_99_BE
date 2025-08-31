@@ -23,7 +23,7 @@ public class Posts extends BaseEntity {
     private String content;
 
     @Column(nullable = false)
-    private boolean is_anonymous;
+    private boolean isAnonymous;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "region_id", nullable = false)
@@ -32,4 +32,12 @@ public class Posts extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    // 글 수정 관련
+    public void updatePost(String title, String content, boolean isAnonymous, Region region) {
+        this.title = title;
+        this.content = content;
+        this.isAnonymous = isAnonymous;
+        this.region = region;
+    }
 }

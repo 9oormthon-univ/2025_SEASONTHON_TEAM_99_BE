@@ -2,6 +2,7 @@ package seasonton.youthPolicy.global.service;
 
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,4 +50,17 @@ public class S3Service {
         }
     }
 
+    // 파일 삭제
+    public void deleteFile(String storedName) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(storedName)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus.FILE_DELETE_FAILED);
+        }
+    }
 }

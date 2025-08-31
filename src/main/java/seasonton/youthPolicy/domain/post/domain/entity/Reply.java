@@ -17,7 +17,7 @@ public class Reply extends BaseEntity {
 
     private String content = "no contents";
 
-    private boolean is_anonymous;
+    private boolean isAnonymous;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -26,4 +26,10 @@ public class Reply extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Posts post;
+
+    // 업데이트 관련 메서드
+    public void updateReply(String content, boolean isAnonymous) {
+        this.content = content;
+        this.isAnonymous = isAnonymous;
+    }
 }
