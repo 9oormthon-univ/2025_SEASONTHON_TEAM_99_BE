@@ -50,6 +50,8 @@ public class PolicyResponseDTO {
     @AllArgsConstructor
     @Builder
     public static class YouthPolicyDetailResponse {
+
+        private String plcyNo;             // 정책 코드
         private String plcyNm;             // 정책명
         private List<String> regions;      // 변환된 지역명 리스트
         private String aplyUrlAddr;        // 신청 주소
@@ -73,6 +75,7 @@ public class PolicyResponseDTO {
         private String lastMdfcnDt;        // 최종 수정일시
     }
 
+    // 댓글 조회
     @Getter
     @Builder
     @AllArgsConstructor
@@ -85,5 +88,30 @@ public class PolicyResponseDTO {
         private String plcyNm;
         private String writer;  // 유저 닉네임 or ID
     }
+
+    // 댓글 수정
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReplyUpdateResponse {
+        private Long id;
+        private String content;
+        private boolean isAnonymous;
+        private String plcyNo;
+        private String plcyNm;
+        private String writer;
+    }
+
+    // 댓글 삭제
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReplyDeleteResponse {
+        private Long id;          // 삭제된 댓글 ID
+        private String message;   // 삭제 성공 메시지
+    }
+
 
 }

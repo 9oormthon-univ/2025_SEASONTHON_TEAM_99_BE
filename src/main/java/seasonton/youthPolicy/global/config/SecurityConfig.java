@@ -37,7 +37,19 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic((AbstractHttpConfigurer::disable))
                 .sessionManagement(s->s.sessionCreationPolicy((SessionCreationPolicy.STATELESS)))
-                .authorizeHttpRequests(a->a.requestMatchers("/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**", "/ping", "/user/signup", "/user/doLogin").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a -> a
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/ping",
+                                "/user/signup",
+                                "/user/doLogin",
+                                "/youth/policies/**",
+                                "/posts/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

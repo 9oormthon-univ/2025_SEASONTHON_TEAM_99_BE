@@ -4,22 +4,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import seasonton.youthPolicy.domain.member.domain.entity.User;
+import seasonton.youthPolicy.domain.member.domain.repository.UserRepository;
+import seasonton.youthPolicy.domain.policy.domain.entity.PolicyLike;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyReply;
 import seasonton.youthPolicy.domain.policy.domain.enums.PolicyStatus;
+import seasonton.youthPolicy.domain.policy.domain.repository.PolicyLikeRepository;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyReplyRepository;
 import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
 import seasonton.youthPolicy.domain.policy.dto.PolicyResponseDTO;
 import seasonton.youthPolicy.domain.policy.exception.PolicyException;
-import seasonton.youthPolicy.domain.user.domain.entity.User;
-import seasonton.youthPolicy.domain.user.domain.repository.UserRepository;
+
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,6 +38,7 @@ public class YouthPolicyService {
     private final RegionCodeMapper regionCodeMapper;
     private final UserRepository userRepository;
     private final PolicyReplyRepository policyReplyRepository;
+    private final PolicyLikeRepository policyLikeRepository;
 
     @Value("${youth.api.url}")
     private String baseUrl;
@@ -267,6 +270,7 @@ public class YouthPolicyService {
             }
 
             return PolicyResponseDTO.YouthPolicyDetailResponse.builder()
+                    .plcyNo(item.path("plcyNo").asText(null))
                     .plcyNm(item.path("plcyNm").asText(null))
                     .regions(regionNames)
                     .aplyUrlAddr(item.path("aplyUrlAddr").asText(null))
@@ -295,58 +299,6 @@ public class YouthPolicyService {
         } catch (Exception e) {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
-    }
-
-
-    /**
-     * 지역명에서 시/도 단위만 추출
-     * 예) "서울특별시 강남구" → "서울특별시"
-     *     "경상북도 경산시" → "경상북도"
-     */
-    private String extractTopLevel(String fullRegionName) {
-        if (fullRegionName == null) return null;
-
-        // 띄어쓰기 기준 첫 단어 + "시"/"도" 단위까지만
-        if (fullRegionName.startsWith("서울특별시")) return "서울특별시";
-        if (fullRegionName.startsWith("부산광역시")) return "부산광역시";
-        if (fullRegionName.startsWith("대구광역시")) return "대구광역시";
-        if (fullRegionName.startsWith("인천광역시")) return "인천광역시";
-        if (fullRegionName.startsWith("광주광역시")) return "광주광역시";
-        if (fullRegionName.startsWith("대전광역시")) return "대전광역시";
-        if (fullRegionName.startsWith("울산광역시")) return "울산광역시";
-        if (fullRegionName.startsWith("세종특별자치시")) return "세종특별자치시";
-
-        if (fullRegionName.startsWith("경기도")) return "경기도";
-        if (fullRegionName.startsWith("강원도")) return "강원도";
-        if (fullRegionName.startsWith("충청북도")) return "충청북도";
-        if (fullRegionName.startsWith("충청남도")) return "충청남도";
-        if (fullRegionName.startsWith("전라북도")) return "전라북도";
-        if (fullRegionName.startsWith("전라남도")) return "전라남도";
-        if (fullRegionName.startsWith("경상북도")) return "경상북도";
-        if (fullRegionName.startsWith("경상남도")) return "경상남도";
-        if (fullRegionName.startsWith("제주특별자치도")) return "제주특별자치도";
-
-        // 못 찾으면 그대로 반환
-        return fullRegionName.split(" ")[0];
-    }
-
-
-    //진행 상태 계산
-    private PolicyStatus calculateStatus(String startDate, String endDate) {
-
-        if (startDate == null || startDate.isBlank() ||
-                endDate == null || endDate.isBlank()) {
-            return PolicyStatus.IN_PROGRESS;
-        }
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        LocalDate today = LocalDate.now();
-        LocalDate start = LocalDate.parse(startDate.trim(), formatter);
-        LocalDate end = LocalDate.parse(endDate.trim(), formatter);
-
-        if (today.isBefore(start)) return PolicyStatus.NOT_STARTED;
-        else if (!today.isAfter(end)) return PolicyStatus.IN_PROGRESS;
-        else return PolicyStatus.COMPLETED;
     }
 
     // 댓글 작성
@@ -388,5 +340,126 @@ public class YouthPolicyService {
                         .writer(reply.isAnonymous() ? "익명" : reply.getUser().getNickname())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    // 댓글 수정
+    @Transactional
+    public PolicyResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PolicyRequestDTO.ReplyUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
+
+        PolicyReply reply = policyReplyRepository.findById(replyId)
+                .orElseThrow(() -> new PolicyException(ErrorStatus.REPLY_NOT_FOUND));
+
+        if (!reply.getUser().getId().equals(userId)) {
+            throw new PolicyException(ErrorStatus.REPLY_FORBIDDEN);
+        }
+
+        // 엔티티에 업데이트용 메서드 추가해서 상태 변경
+        reply.updateReply(request.getContent(), request.isAnonymous());
+
+        return PolicyResponseDTO.ReplyUpdateResponse.builder()
+                .id(reply.getId())
+                .content(reply.getContent())
+                .isAnonymous(reply.isAnonymous())
+                .plcyNo(reply.getPlcyNo())
+                .plcyNm(reply.getPlcyNm())
+                .writer(reply.isAnonymous() ? "익명" : user.getNickname())
+                .build();
+    }
+
+    // 댓글 삭제
+    @Transactional
+    public PolicyResponseDTO.ReplyDeleteResponse deleteReply(Long replyId, Long userId) {
+        PolicyReply reply = policyReplyRepository.findById(replyId)
+                .orElseThrow(() -> new PolicyException(ErrorStatus.REPLY_NOT_FOUND));
+
+        if (!reply.getUser().getId().equals(userId)) {
+            throw new PolicyException(ErrorStatus.REPLY_FORBIDDEN);
+        }
+
+        policyReplyRepository.delete(reply);
+
+        return PolicyResponseDTO.ReplyDeleteResponse.builder()
+                .id(reply.getId())
+                .message("댓글이 성공적으로 삭제되었습니다.")
+                .build();
+    }
+
+    // 정책 좋아요 토글 (추가/취소)
+    @Transactional
+    public String toggleLike(Long userId, String plcyNo) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
+
+        PolicyLike existing = policyLikeRepository.findByUserAndPlcyNo(user, plcyNo).orElse(null);
+
+        if (existing != null) {
+            policyLikeRepository.delete(existing);
+            return "좋아요 취소됨";
+        } else {
+            PolicyLike like = PolicyLike.builder()
+                    .user(user)
+                    .plcyNo(plcyNo)
+                    .build();
+            policyLikeRepository.save(like);
+            return "좋아요 추가됨";
+        }
+    }
+
+    // 정책 좋아요 개수 조회
+    public long getLikeCount(String plcyNo) {
+        return policyLikeRepository.countByPlcyNo(plcyNo);
+    }
+
+    /**
+     * 지역명에서 시/도 단위만 추출
+     * 예) "서울특별시 강남구" → "서울특별시"
+     *     "경상북도 경산시" → "경상북도"
+     */
+    private String extractTopLevel(String fullRegionName) {
+        if (fullRegionName == null) return null;
+
+        // 띄어쓰기 기준 첫 단어 + "시"/"도" 단위까지만
+        if (fullRegionName.startsWith("서울특별시")) return "서울특별시";
+        if (fullRegionName.startsWith("부산광역시")) return "부산광역시";
+        if (fullRegionName.startsWith("대구광역시")) return "대구광역시";
+        if (fullRegionName.startsWith("인천광역시")) return "인천광역시";
+        if (fullRegionName.startsWith("광주광역시")) return "광주광역시";
+        if (fullRegionName.startsWith("대전광역시")) return "대전광역시";
+        if (fullRegionName.startsWith("울산광역시")) return "울산광역시";
+        if (fullRegionName.startsWith("세종특별자치시")) return "세종특별자치시";
+
+        if (fullRegionName.startsWith("경기도")) return "경기도";
+        if (fullRegionName.startsWith("강원도")) return "강원도";
+        if (fullRegionName.startsWith("충청북도")) return "충청북도";
+        if (fullRegionName.startsWith("충청남도")) return "충청남도";
+        if (fullRegionName.startsWith("전라북도")) return "전라북도";
+        if (fullRegionName.startsWith("전라남도")) return "전라남도";
+        if (fullRegionName.startsWith("경상북도")) return "경상북도";
+        if (fullRegionName.startsWith("경상남도")) return "경상남도";
+        if (fullRegionName.startsWith("제주특별자치도")) return "제주특별자치도";
+
+        // 못 찾으면 그대로 반환
+        return fullRegionName.split(" ")[0];
+    }
+
+    //진행 상태 계산
+    private PolicyStatus calculateStatus(String startDate, String endDate) {
+
+        if (startDate == null || startDate.isBlank() ||
+                endDate == null || endDate.isBlank()) {
+            return PolicyStatus.IN_PROGRESS;
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        LocalDate today = LocalDate.now();
+        LocalDate start = LocalDate.parse(startDate.trim(), formatter);
+        LocalDate end = LocalDate.parse(endDate.trim(), formatter);
+
+        if (today.isBefore(start)) return PolicyStatus.NOT_STARTED;
+        else if (!today.isAfter(end)) return PolicyStatus.IN_PROGRESS;
+        else return PolicyStatus.COMPLETED;
     }
 }

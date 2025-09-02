@@ -23,6 +23,7 @@ import java.util.*;
 
 @Component
 public class JwtTokenFilter extends GenericFilter {
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -58,10 +59,23 @@ public class JwtTokenFilter extends GenericFilter {
                 Long userId = Optional.ofNullable(claims.get("id", Number.class))
                         .map(Number::longValue).orElse(null);
 
-                UserDetails principal = User.withUsername(email).password("").authorities(authorities).build();
+//                UserDetails principal = User.withUsername(email).password("").authorities(authorities).build();
+//
+//                var auth = new UsernamePasswordAuthenticationToken(principal, jwtToken, authorities);
+//                auth.setDetails(Map.of("userId", userId, "email", email));
 
-                var auth = new UsernamePasswordAuthenticationToken(principal, jwtToken, authorities);
-                auth.setDetails(Map.of("userId", userId, "email", email));
+                // 커스텀 UserPrincipal로 교체
+                UserPrincipal principal = new UserPrincipal(
+                        userId,
+                        email,
+                        "", // 토큰 기반 인증이라 비밀번호 불필요
+                        authorities
+                );
+
+                Authentication auth = new UsernamePasswordAuthenticationToken(
+                        principal, jwtToken, authorities
+                );
+
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
             }

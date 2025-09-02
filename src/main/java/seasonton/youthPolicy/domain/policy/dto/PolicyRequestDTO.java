@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 public class PolicyRequestDTO {
 
+    // 댓글 생성
     @Getter
     @Builder
     @AllArgsConstructor
@@ -17,4 +18,15 @@ public class PolicyRequestDTO {
         private String plcyNo;   // 정책 번호
         private String plcyNm;   // 정책 이름
     }
+
+    // 댓글 수정
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReplyUpdateRequest {
+        private String content;
+        private boolean isAnonymous;
+    }
+
 }
