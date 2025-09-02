@@ -1,4 +1,4 @@
-name: CD - Deploy to ECS 
+name: CD - Deploy to ECS
 
 on:
   workflow_dispatch:
@@ -21,19 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: ap-northeast-2
-      # 👇 아래 5개는 네 값으로 변경
-      ECR_REPO: your-ecr-repo              # 예: mapzip-api
-      ECS_CLUSTER: your-ecs-cluster        # 예: hackathon-cluster
-      ECS_SERVICE: your-ecs-service        # 예: app-service
-      TASK_FAMILY: your-task-family        # 예: app-task
-      LOG_GROUP: /aws/ecs/your-app         # 로그 그룹명 (미리 생성 권장)
+      ECR_REPO: cheongjeong-api
+      ECS_CLUSTER: cheongjeong-cluster
+      ECS_SERVICE: cheongjeong-service
+      TASK_FAMILY: cheongjeong-task
+      LOG_GROUP: cheongjeong
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure AWS creds (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}  # 리포 시크릿에 저장한 OIDC Role ARN
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
