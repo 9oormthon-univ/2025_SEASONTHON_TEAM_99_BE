@@ -1,4 +1,4 @@
-package seasonton.youthPolicy.domain.user.exception;
+package seasonton.youthPolicy.domain.member.exception;
 
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 import seasonton.youthPolicy.global.exception.GeneralException;

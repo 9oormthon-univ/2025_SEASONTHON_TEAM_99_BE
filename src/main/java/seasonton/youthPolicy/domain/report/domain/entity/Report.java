@@ -1,8 +1,9 @@
-package seasonton.youthPolicy.domain.user.domain.entity;
+package seasonton.youthPolicy.domain.report.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import seasonton.youthPolicy.domain.model.entity.BaseEntity;
+import seasonton.youthPolicy.domain.model.entity.Region;
 
 @Entity
 @Getter

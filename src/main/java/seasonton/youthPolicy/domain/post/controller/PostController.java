@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +29,7 @@ public class PostController {
     private final PostService postService;
 
     // 글 작성
-    @PostMapping(value = "/{user-id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/new", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "게시글 작성",
             description = "게시글 정보와 지역 정보를 multipart/form-data로 넘겨주시고, Jwt 토큰 인증을 해주세요."
@@ -42,8 +44,10 @@ public class PostController {
             @RequestParam Long regionId,
             @RequestParam boolean isAnonymous,
             @RequestPart("imageFile") List<MultipartFile> imageFile,
-            @PathVariable("user-id") Long userId
+            Authentication auth
     ) {
+        var details = (java.util.Map<?, ?>) auth.getDetails();
+        Long userId = (Long) details.get("userId");
         PostResponseDTO.PostCreateResponse response = postService.createPost(userId, title, content, regionId, isAnonymous, imageFile);
         return BaseResponse.onSuccess(SuccessStatus.POST_CREATE_SUCCESS, response);
 
