@@ -4,8 +4,8 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "512",
   "memory": "1024",
-  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/yourAppTaskRole",
+  "executionRoleArn": "arn:aws:iam::259096356427:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::259096356427:role/cheongjeongAppTaskRole",
   "containerDefinitions": [
     {
       "name": "app",
@@ -17,7 +17,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "<LOG_GROUP>", // 변경해야됨
+          "awslogs-group": "cheongjeong",
           "awslogs-region": "ap-northeast-2",
           "awslogs-stream-prefix": "ecs"
         }
