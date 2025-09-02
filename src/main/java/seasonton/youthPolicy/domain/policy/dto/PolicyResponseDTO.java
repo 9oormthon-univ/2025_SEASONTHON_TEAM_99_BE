@@ -17,6 +17,7 @@ public class PolicyResponseDTO {
     @AllArgsConstructor
     @Builder
     public static class YouthPolicyResponse {
+        private String plcyNo;             // 정책 코드
         private String plcyNm;
         private List<String> regionNames;
         private String frstRegDt;
@@ -75,7 +76,7 @@ public class PolicyResponseDTO {
         private String lastMdfcnDt;        // 최종 수정일시
     }
 
-    // 댓글 조회
+    // 정책 댓글 조회
     @Getter
     @Builder
     @AllArgsConstructor
@@ -89,7 +90,7 @@ public class PolicyResponseDTO {
         private String writer;  // 유저 닉네임 or ID
     }
 
-    // 댓글 수정
+    // 정책 댓글 수정
     @Getter
     @Builder
     @NoArgsConstructor
@@ -103,7 +104,7 @@ public class PolicyResponseDTO {
         private String writer;
     }
 
-    // 댓글 삭제
+    // 정책 댓글 삭제
     @Getter
     @Builder
     @NoArgsConstructor

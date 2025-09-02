@@ -59,7 +59,7 @@ public class YouthPolicyController {
     }
 
     // 정책 지역 단일 조회
-    @GetMapping("/policies/{plcyNo}/regions")
+    @GetMapping("/policies/{plcy-no}/regions")
     @Operation(summary = "정책 지역 단일 조회", description = "정책번호로 해당 정책의 시행 지역(시/도 단위)을 반환합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "정책 지역 조회 성공"),
@@ -67,7 +67,7 @@ public class YouthPolicyController {
             @ApiResponse(responseCode = "500", description = "정책 API 호출 오류")
     })
     public BaseResponse<PolicyResponseDTO.PolicyRegionResponse> getPolicyRegionsByNo(
-            @PathVariable String plcyNo) {
+            @PathVariable("plcy-no") String plcyNo) {
 
         PolicyResponseDTO.PolicyRegionResponse data = youthPolicyService.getPolicyRegionsByNo(plcyNo);
         return BaseResponse.onSuccess(SuccessStatus.REGION_READ_SUCCESS, data);

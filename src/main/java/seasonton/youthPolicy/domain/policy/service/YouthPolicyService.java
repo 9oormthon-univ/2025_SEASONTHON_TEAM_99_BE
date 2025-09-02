@@ -108,6 +108,7 @@ public class YouthPolicyService {
 
                 results.add(
                         PolicyResponseDTO.YouthPolicyResponse.builder()
+                                .plcyNo(item.path("plcyNo").asText(null))
                                 .plcyNm(item.path("plcyNm").asText(null))
                                 .regionNames(regionNames)
                                 .frstRegDt(item.path("frstRegDt").asText(null)) // 정렬용 등록일
