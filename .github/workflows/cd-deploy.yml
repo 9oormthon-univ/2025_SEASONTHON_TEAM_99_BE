@@ -1,0 +1,68 @@
+name: CD - Deploy to ECS
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "배포할 ECR 이미지 태그 (비우면 main-latest 사용)"
+        required: false
+        default: ""
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ecs-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-northeast-2
+      ECR_REPO: cheongjeong-api
+      ECS_CLUSTER: cheongjeong-cluster
+      ECS_SERVICE: cheongjeong-service
+      TASK_FAMILY: cheongjeong-task
+      LOG_GROUP: cheongjeong
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS creds (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 입력이 비었으면 main-latest 사용
+      - name: Decide image tag (default to main-latest)
+        id: pick
+        run: |
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            echo "tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=main-latest" >> $GITHUB_OUTPUT
+          fi
+          echo "Using tag: $(cat $GITHUB_OUTPUT | cut -d= -f2)"
+
+      - name: Render Task Definition
+        run: |
+          IMAGE_URI="${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}:${{ steps.pick.outputs.tag }}"
+          sed "s|<IMAGE>|$IMAGE_URI|g; s|<LOG_GROUP>|${{ env.LOG_GROUP }}|g" deploy/ecs-taskdef.json > taskdef.out.json
+          echo "IMAGE_URI=$IMAGE_URI"
+          head -n 40 taskdef.out.json
+
+      - name: Register TaskDef & Update Service (rolling)
+        run: |
+          aws ecs register-task-definition --cli-input-json file://taskdef.out.json > /tmp/td.json
+          ARN=$(jq -r '.taskDefinition.taskDefinitionArn' /tmp/td.json)
+          echo "TaskDef ARN: $ARN"
+          aws ecs update-service \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --service "${{ env.ECS_SERVICE }}" \
+            --task-definition "$ARN"

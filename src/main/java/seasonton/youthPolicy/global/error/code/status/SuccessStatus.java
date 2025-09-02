@@ -1,0 +1,41 @@
+package seasonton.youthPolicy.global.error.code.status;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@AllArgsConstructor
+public enum SuccessStatus {
+
+    // Common
+    OK(HttpStatus.OK, "COMMON_200", "성공입니다."),
+
+    // post
+    POST_CREATE_SUCCESS(HttpStatus.CREATED, "POST_201", "게시글이 성공적으로 생성되었습니다."),
+    POST_READ_SUCCESS(HttpStatus.OK, "POST_200", "게시글 목록 조회 성공"),
+    POST_UPDATE_SUCCESS(HttpStatus.OK, "POST_200", "게시글 수정 성공"),
+    POST_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "POST_204", "게시글 삭제 성공"),
+    POST_REPLY_CREATE_SUCCESS(HttpStatus.CREATED, "REPLY_201", "댓글이 성공적으로 생성되었습니다."),
+    REPLY_READ_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 목록 조회 성공"),
+    REPLY_UPDATE_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 수정 성공"),
+    REPLY_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "REPLY_204", "댓글 삭제 성공"),
+
+
+
+    // test
+    SUCCESS_TEST(HttpStatus.OK, "TEST_200", "테스트 완료");
+
+    private final HttpStatus httpStatus;
+    private final String code;
+    private final String message;
+
+    public ReasonDTO getReasonHttpStatus() {
+        return ReasonDTO.builder()
+                .message(message)
+                .code(code)
+                .isSuccess(true)
+                .httpStatus(httpStatus)
+                .build();
+    }
+}
