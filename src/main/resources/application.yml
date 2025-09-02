@@ -35,3 +35,8 @@ minio:
   access-key: ${MINIO_ACCESS_KEY}
   secret-key: ${MINIO_SECRET_KEY}
   bucket: seasonton-bucket
+
+youth:
+  api:
+    url: ${YOUTH_POLICY_URL}
+    key: ${YOUTH_POLICY_KEY}
