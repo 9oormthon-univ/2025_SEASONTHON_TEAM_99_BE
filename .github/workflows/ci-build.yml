@@ -23,7 +23,7 @@ jobs:
       AWS_REGION: ap-northeast-2
       ECR_REPO: your-ecr-repo          # <- ✅ 여기 수정
       IMAGE_TAG: ${{ github.sha }}
-      APP_PATH: .                       # <- ✅ 여기 수정 (예: backend/service-a)
+      APP_PATH: .                     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
