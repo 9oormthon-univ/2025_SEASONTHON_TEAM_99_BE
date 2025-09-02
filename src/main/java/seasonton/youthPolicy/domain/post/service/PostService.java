@@ -1,6 +1,7 @@
 package seasonton.youthPolicy.domain.post.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +37,9 @@ public class PostService {
     private final UserRepository userRepository;
     private final ReplyRepository replyRepository;
     private final RegionRepository regionRepository;
+
+    @Value("${minio.dir.post-image}")
+    private String postDIr;
 
     // 글 작성
     @Transactional
@@ -229,7 +233,7 @@ public class PostService {
         }
 
         for (MultipartFile image : images) {
-            S3DTO.UploadResult result = s3Service.uploadFile(image);
+            S3DTO.UploadResult result = s3Service.uploadFile(postDIr, image);
 
             PostImage postImage = PostImage.builder()
                     .originalName(result.getOriginalName())
