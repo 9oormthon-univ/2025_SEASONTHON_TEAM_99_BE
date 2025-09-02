@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: ap-northeast-2
-      ECR_REPO: your-ecr-repo          # <- ✅ 여기 수정
+      ECR_REPO: cheongjeong-api
       IMAGE_TAG: ${{ github.sha }}
       APP_PATH: .                     
     steps:
@@ -64,7 +64,7 @@ jobs:
       - name: Configure AWS creds (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}   # <- ✅ Repo Secrets에 추가
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}  
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
