@@ -124,10 +124,10 @@ public class YouthPolicyController {
     }
 
     // 댓글 수정
-    @PatchMapping("/policies/replies/{replyId}")
+    @PatchMapping("/policies/replies/{reply-id}")
     @Operation(summary = "정책 댓글 수정", description = "작성한 댓글을 수정합니다.")
     public BaseResponse<PolicyResponseDTO.ReplyUpdateResponse> updateReply(
-            @PathVariable Long replyId,
+            @PathVariable("reply-id") Long replyId,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody PolicyRequestDTO.ReplyUpdateRequest request) {
         return BaseResponse.onSuccess(
@@ -137,7 +137,7 @@ public class YouthPolicyController {
     }
 
     // 댓글 삭제
-    @DeleteMapping("/policies/replies/{replyId}")
+    @DeleteMapping("/policies/replies/{reply-id}")
     @Operation(summary = "정책 댓글 삭제", description = "작성한 댓글을 삭제합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "댓글 삭제 성공"),
@@ -145,7 +145,7 @@ public class YouthPolicyController {
             @ApiResponse(responseCode = "404", description = "댓글 없음"),
     })
     public BaseResponse<PolicyResponseDTO.ReplyDeleteResponse> deleteReply(
-            @PathVariable Long replyId,
+            @PathVariable("reply-id") Long replyId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return BaseResponse.onSuccess(
                 SuccessStatus.POLICY_REPLY_DELETE_SUCCESS,
@@ -155,7 +155,7 @@ public class YouthPolicyController {
 
 
     // 정책 좋아요 토글 (추가/취소)
-    @PostMapping("/{plcyNo}/like")
+    @PostMapping("/{plcy-no}/like")
     @Operation(summary = "정책 좋아요 토글", description = "특정 정책에 대해 좋아요를 추가하거나 취소합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "좋아요 토글 성공"),
@@ -163,7 +163,7 @@ public class YouthPolicyController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 유저")
     })
     public BaseResponse<String> toggleLike(
-            @PathVariable String plcyNo,
+            @PathVariable("plcy-no") String plcyNo,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String message = youthPolicyService.toggleLike(userPrincipal.getId(), plcyNo);
@@ -171,13 +171,13 @@ public class YouthPolicyController {
     }
 
     // 정책 좋아요 갯수 조회
-    @GetMapping("/{plcyNo}/likes")
+    @GetMapping("/{plcy-no}/likes")
     @Operation(summary = "정책 좋아요 수 조회", description = "특정 정책의 좋아요 개수를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "좋아요 수 조회 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
-    public BaseResponse<Long> getLikeCount(@PathVariable String plcyNo) {
+    public BaseResponse<Long> getLikeCount(@PathVariable("plcy-no") String plcyNo) {
         long count = youthPolicyService.getLikeCount(plcyNo);
         return BaseResponse.onSuccess(SuccessStatus.LIKE_COUNT_SUCCESS, count);
     }
