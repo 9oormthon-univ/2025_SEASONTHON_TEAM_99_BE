@@ -30,6 +30,10 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.jdbc.core: DEBUG
 
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration: 720 #분단위
+
 minio:
   url: ${MINIO_URL}
   access-key: ${MINIO_ACCESS_KEY}

@@ -3,7 +3,7 @@ package seasonton.youthPolicy.domain.post.converter;
 import seasonton.youthPolicy.domain.post.domain.entity.Posts;
 import seasonton.youthPolicy.domain.post.domain.entity.Reply;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
-import seasonton.youthPolicy.domain.user.domain.entity.Region;
+import seasonton.youthPolicy.domain.model.entity.Region;
 
 public class PostConverter {
 
