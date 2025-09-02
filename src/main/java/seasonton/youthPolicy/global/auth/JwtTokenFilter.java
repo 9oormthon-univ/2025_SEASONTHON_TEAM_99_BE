@@ -51,7 +51,7 @@ public class JwtTokenFilter extends GenericFilter {
                         .getBody();
 
                 List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + claims.get("role")));
+                authorities.add(new SimpleGrantedAuthority(claims.get("role").toString()));
 
 
                 String email = claims.getSubject();
