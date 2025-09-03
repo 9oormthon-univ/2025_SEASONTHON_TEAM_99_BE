@@ -27,10 +27,10 @@ public class S3Service {
 
 
     // 파일 업로드
-    public S3DTO.UploadResult uploadFile(MultipartFile file) {
+    public S3DTO.UploadResult uploadFile(String dir, MultipartFile file) {
         try {
             String originalName = file.getOriginalFilename();
-            String storedName = UUID.randomUUID() + "_" + originalName;
+            String storedName = dir + "/" + UUID.randomUUID() + "_" + originalName;
 
             minioClient.putObject(
                     PutObjectArgs.builder()

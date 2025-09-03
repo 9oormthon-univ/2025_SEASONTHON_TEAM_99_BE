@@ -3,11 +3,10 @@ package seasonton.youthPolicy.domain.member.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import seasonton.youthPolicy.domain.member.domain.entity.User;
 import seasonton.youthPolicy.domain.member.dto.MemberCreateDto;
 import seasonton.youthPolicy.domain.member.dto.MemberLoginDto;
@@ -23,9 +22,16 @@ public class MemberController {
     private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "회원가입", description = "청정 자체 계정 회원가입")
-    public ResponseEntity<User> signup(@RequestBody MemberCreateDto memberCreateDto){
+    public ResponseEntity<User> signup(
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String nickname,
+            @RequestParam String region,
+            @RequestPart("imageFile") MultipartFile imageFile
+    ){
+        MemberCreateDto memberCreateDto = new MemberCreateDto(email, password, nickname, region, imageFile);
         User user = memberService.create(memberCreateDto);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
