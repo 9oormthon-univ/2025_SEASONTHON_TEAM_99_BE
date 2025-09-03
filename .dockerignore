@@ -1,5 +1,10 @@
+
 .git
 .gradle
-build
-**/*.iml
-.idea
+**/.gradle/**
+**/.git/**
+
+build/*
+
+!build/libs/
+!build/libs/*.jar
