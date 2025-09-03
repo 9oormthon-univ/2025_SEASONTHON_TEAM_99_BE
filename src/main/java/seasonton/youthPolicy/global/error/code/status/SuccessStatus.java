@@ -21,7 +21,17 @@ public enum SuccessStatus {
     REPLY_UPDATE_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 수정 성공"),
     REPLY_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "REPLY_204", "댓글 삭제 성공"),
 
-
+    // policy
+    POLICY_READ_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 조회 성공"),
+    POLICY_STATUS_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 상태 조회 성공"),
+    REGION_READ_SUCCESS(HttpStatus.OK, "REGION_200", "지역 조회 성공"),
+    POLICY_DETAIL_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 상세 조회 성공"),
+    POLICY_REPLY_CREATE_SUCCESS(HttpStatus.CREATED, "REPLY_201", "댓글 작성 성공"),
+    POLICY_REPLY_READ_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 조회 성공"),
+    LIKE_TOGGLE_SUCCESS(HttpStatus.OK, "LIKE_200", "해당 정책에 좋아요 표시 완료"),
+    LIKE_COUNT_SUCCESS(HttpStatus.OK, "LIKE_200", "해당 정책의 좋아요 갯수 조회 완료"),
+    POLICY_REPLY_UPDATE_SUCCESS(HttpStatus.OK, "REPLY_200", "정책 댓글 수정 성공"),
+    POLICY_REPLY_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "REPLY_204", "정책 댓글 삭제 성공"),
 
     // test
     SUCCESS_TEST(HttpStatus.OK, "TEST_200", "테스트 완료");

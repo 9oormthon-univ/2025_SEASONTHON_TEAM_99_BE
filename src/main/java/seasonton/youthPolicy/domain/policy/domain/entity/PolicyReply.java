@@ -18,13 +18,22 @@ public class PolicyReply extends BaseEntity {
 
     private String content = "no content";
 
-    private boolean is_anonymous;
+    private boolean isAnonymous;
+
+    private String plcyNo;   // 정책 번호
+
+    private String plcyNm;   // 정책 이름
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "policy_id", nullable = false)
-    private Policy policy;
+    public void updateReply(String content, boolean isAnonymous) {
+        this.content = content;
+        this.isAnonymous = isAnonymous;
+    }
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "policy_id", nullable = false)
+//    private Policy policy;
 }
