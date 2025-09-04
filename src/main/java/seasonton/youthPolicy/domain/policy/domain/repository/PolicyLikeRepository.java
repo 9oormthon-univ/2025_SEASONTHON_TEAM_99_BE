@@ -2,9 +2,11 @@ package seasonton.youthPolicy.domain.policy.domain.repository;
 
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import seasonton.youthPolicy.domain.member.domain.entity.User;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyLike;
 
+import java.util.List;
 import java.util.Optional;
 
 @ReadingConverter
@@ -15,4 +17,10 @@ public interface PolicyLikeRepository extends JpaRepository<PolicyLike, Long> {
 
     // 특정 정책(plcyNo)의 좋아요 개수 카운트
     long countByPlcyNo(String plcyNo);
+
+    // 정책 별 좋아요 개수 카운트
+    @Query("SELECT pl.plcyNo, COUNT(pl) " +
+            "FROM PolicyLike pl " +
+            "GROUP BY pl.plcyNo")
+    List<Object[]> countLikesByPolicy();
 }

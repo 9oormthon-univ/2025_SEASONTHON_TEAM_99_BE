@@ -11,7 +11,7 @@ import seasonton.youthPolicy.domain.model.entity.BaseEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostImage extends BaseEntity {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     // 원본 파일명
