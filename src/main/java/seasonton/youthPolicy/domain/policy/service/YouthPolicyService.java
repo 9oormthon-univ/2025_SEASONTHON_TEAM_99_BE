@@ -22,6 +22,8 @@ import seasonton.youthPolicy.domain.policy.exception.PolicyException;
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,10 +72,11 @@ public class YouthPolicyService {
     심사방법 : srngMthdCn
     최초등록일시: frstRegDt
     최종수정일시: lastMdfcnDt
+    대분류:lclsfNm
     * */
 
     // 최신 순 조회
-    public List<PolicyResponseDTO.YouthPolicyResponse> getPolicies(int pageNum, int pageSize) {
+    public PolicyResponseDTO.PolicyListResponse getPolicies(int pageNum, int pageSize) {
         try {
             String url = baseUrl
                     + "?apiKeyNm=" + apiKey
@@ -87,70 +90,84 @@ public class YouthPolicyService {
             }
 
             JsonNode root = objectMapper.readTree(response);
-            JsonNode items = root.path("result").path("youthPolicyList");
+            JsonNode resultNode = root.path("result");
+            JsonNode items = resultNode.path("youthPolicyList");
 
             if (items.isMissingNode() || !items.isArray()) {
                 throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
             }
 
-            List<PolicyResponseDTO.YouthPolicyResponse> results = new ArrayList<>();
+            // API에서 내려주는 전체 개수
+            int totalCount = resultNode.path("paging").path("totalCount").asInt(-1);
 
+            List<PolicyResponseDTO.YouthPolicyResponse> results = new ArrayList<>();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
             for (JsonNode item : items) {
+                Set<String> regionSet = new HashSet<>();
                 String zipCodes = item.path("zipCd").asText(null);
-                List<String> regionNames = new ArrayList<>();
-                if (zipCodes != null) {
+                if (zipCodes != null && !zipCodes.isBlank()) {
                     for (String code : zipCodes.split(",")) {
-                        regionNames.add(regionCodeMapper.getRegionName(code.trim()));
+                        String regionName = regionCodeMapper.getRegionName(code.trim());
+                        if (regionName != null) {
+                            regionSet.add(extractTopLevel(regionName));
+                        }
                     }
                 }
+
+                String startDate = item.path("bizPrdBgngYmd").asText(null);
+                String endDate = item.path("bizPrdEndYmd").asText(null);
+                PolicyStatus status = calculateStatus(startDate, endDate);
+
+                Long likeCount = policyLikeRepository.countByPlcyNo(item.path("plcyNo").asText(null));
 
                 results.add(
                         PolicyResponseDTO.YouthPolicyResponse.builder()
                                 .plcyNo(item.path("plcyNo").asText(null))
                                 .plcyNm(item.path("plcyNm").asText(null))
-                                .regionNames(regionNames)
-                                .frstRegDt(item.path("frstRegDt").asText(null)) // 정렬용 등록일
+                                .regionNames(regionSet)
+                                .frstRegDt(item.path("frstRegDt").asText(null))
+                                .lclsfNm(item.path("lclsfNm").asText(null))
+                                .likeCount(likeCount)
+                                .status(status)
+                                .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
+                                .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
                                 .build()
                 );
             }
 
-            // 최신순 정렬 (등록일 내림차순, 이름 사전순)
+            if (totalCount == -1) {
+                totalCount = results.size();
+            }
+
             results.sort(
                     Comparator.comparing(
                                     (PolicyResponseDTO.YouthPolicyResponse p) ->
-                                            LocalDateTime.parse(p.getFrstRegDt(), formatter)
-                            ).reversed()
+                                            LocalDateTime.parse(p.getFrstRegDt(), formatter))
+                            .reversed()
                             .thenComparing(PolicyResponseDTO.YouthPolicyResponse::getPlcyNm,
                                     Comparator.nullsLast(String::compareTo))
             );
 
-            if (results.isEmpty()) {
-                throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
-            }
-
-            // 수동 페이징
             int fromIndex = (pageNum - 1) * pageSize;
             int toIndex = Math.min(fromIndex + pageSize, results.size());
-            if (fromIndex >= results.size()) {
-                return Collections.emptyList();
-            }
+            List<PolicyResponseDTO.YouthPolicyResponse> pageResults =
+                    fromIndex >= results.size() ? Collections.emptyList() : results.subList(fromIndex, toIndex);
 
-            return results.subList(fromIndex, toIndex);
-        } catch (PolicyException e) {
-            throw e;
-        } catch (IllegalArgumentException e) {
-            throw new PolicyException(ErrorStatus.POLICY_INVALID_REQUEST);
+            // 전체 개수 + 정책 리스트 반환
+            return PolicyResponseDTO.PolicyListResponse.builder()
+                    .totalCount(totalCount)
+                    .policies(pageResults)
+                    .build();
+
         } catch (Exception e) {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
     }
 
     // 좋아요 순 조회
-    public List<PolicyResponseDTO.YouthPolicyLikeResponse> getPoliciesOrderByLikes(int pageNum, int pageSize) {
+    public PolicyResponseDTO.PolicyLikeListResponse getPoliciesOrderByLikes(int pageNum, int pageSize) {
         try {
-            // 1. 온통청년 API 호출
             String url = baseUrl
                     + "?apiKeyNm=" + apiKey
                     + "&rtnType=json"
@@ -163,81 +180,76 @@ public class YouthPolicyService {
             }
 
             JsonNode root = objectMapper.readTree(response);
-            JsonNode items = root.path("result").path("youthPolicyList");
+            JsonNode resultNode = root.path("result");
+            JsonNode items = resultNode.path("youthPolicyList");
 
             if (items.isMissingNode() || !items.isArray()) {
                 throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
             }
 
+            int totalCount = resultNode.path("paging").path("totalCount").asInt(-1);
+
             List<PolicyResponseDTO.YouthPolicyLikeResponse> results = new ArrayList<>();
 
             for (JsonNode item : items) {
+                Set<String> regionSet = new HashSet<>();
                 String zipCodes = item.path("zipCd").asText(null);
-                List<String> regionNames = new ArrayList<>();
-                if (zipCodes != null) {
+                if (zipCodes != null && !zipCodes.isBlank()) {
                     for (String code : zipCodes.split(",")) {
-                        regionNames.add(regionCodeMapper.getRegionName(code.trim()));
+                        String regionName = regionCodeMapper.getRegionName(code.trim());
+                        if (regionName != null) {
+                            regionSet.add(extractTopLevel(regionName));
+                        }
                     }
                 }
+
+                String startDate = item.path("bizPrdBgngYmd").asText(null);
+                String endDate = item.path("bizPrdEndYmd").asText(null);
+                PolicyStatus status = calculateStatus(startDate, endDate);
 
                 results.add(
                         PolicyResponseDTO.YouthPolicyLikeResponse.builder()
                                 .plcyNo(item.path("plcyNo").asText(null))
                                 .plcyNm(item.path("plcyNm").asText(null))
-                                .regionNames(regionNames)
+                                .regionNames(regionSet)
                                 .frstRegDt(item.path("frstRegDt").asText(null))
-                                .likeCount(0L) // 초기값
+                                .lclsfNm(item.path("lclsfNm").asText(null))
+                                .likeCount(policyLikeRepository.countByPlcyNo(item.path("plcyNo").asText(null)))
+                                .status(status)
+                                .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
+                                .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
                                 .build()
                 );
             }
 
-            if (results.isEmpty()) {
-                throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
+            if (totalCount == -1) {
+                totalCount = results.size();
             }
 
-            // 2. DB에서 전체 정책 좋아요 수 조회
-            List<Object[]> counts = policyLikeRepository.countLikesByPolicy();
-            Map<String, Long> likeCountMap = counts.stream()
-                    .collect(Collectors.toMap(c -> (String)c[0], c -> (Long)c[1]));
-
-            // 3. DTO 다시 생성해서 likeCount 채워넣기
-            List<PolicyResponseDTO.YouthPolicyLikeResponse> enrichedResults = new ArrayList<>();
-            for (PolicyResponseDTO.YouthPolicyLikeResponse p : results) {
-                enrichedResults.add(
-                        PolicyResponseDTO.YouthPolicyLikeResponse.builder()
-                                .plcyNo(p.getPlcyNo())
-                                .plcyNm(p.getPlcyNm())
-                                .regionNames(p.getRegionNames())
-                                .frstRegDt(p.getFrstRegDt())
-                                .likeCount(likeCountMap.getOrDefault(p.getPlcyNo(), 0L))
-                                .build()
-                );
-            }
-
-            // 4. 좋아요순 정렬 (많은 순 → 동률이면 이름 가나다순)
-            enrichedResults.sort(
+            // 정렬
+            results.sort(
                     Comparator.comparing(PolicyResponseDTO.YouthPolicyLikeResponse::getLikeCount).reversed()
                             .thenComparing(PolicyResponseDTO.YouthPolicyLikeResponse::getPlcyNm,
                                     Comparator.nullsLast(String::compareTo))
             );
 
-            // 5. 수동 페이징
+            // 페이징 처리
             int fromIndex = (pageNum - 1) * pageSize;
-            int toIndex = Math.min(fromIndex + pageSize, enrichedResults.size());
-            if (fromIndex >= enrichedResults.size()) {
-                return Collections.emptyList();
-            }
+            int toIndex = Math.min(fromIndex + pageSize, results.size());
+            List<PolicyResponseDTO.YouthPolicyLikeResponse> pageResults =
+                    fromIndex >= results.size() ? Collections.emptyList() : results.subList(fromIndex, toIndex);
 
-            return enrichedResults.subList(fromIndex, toIndex);
+            return PolicyResponseDTO.PolicyLikeListResponse.builder()
+                    .totalCount(totalCount)
+                    .policies(pageResults)
+                    .build();
 
-        } catch (PolicyException e) {
-            throw e;
-        } catch (IllegalArgumentException e) {
-            throw new PolicyException(ErrorStatus.POLICY_INVALID_REQUEST);
         } catch (Exception e) {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
     }
+
+
 
 
     // 정책 상태 조회
@@ -287,7 +299,7 @@ public class YouthPolicyService {
             String url = baseUrl
                     + "?apiKeyNm=" + apiKey
                     + "&rtnType=json"
-                    + "&plcyNo=" + plcyNo; // ✅ 정책번호 조건 추가
+                    + "&plcyNo=" + plcyNo;
 
             String response = restTemplate.getForObject(url, String.class);
             if (response == null || response.isBlank()) {
@@ -329,6 +341,7 @@ public class YouthPolicyService {
     }
 
     // 정책 상세보기
+    // 정책 상세보기
     public PolicyResponseDTO.YouthPolicyDetailResponse getPolicyDetailByName(String plcyNm) {
         try {
             String url = baseUrl
@@ -350,15 +363,16 @@ public class YouthPolicyService {
 
             JsonNode item = items.get(0);
 
-            // 지역 변환
-            List<String> regionNames = new ArrayList<>();
+            // 지역 변환 (시/도 단위만)
+            Set<String> regionSet = new HashSet<>();
             String zipCodes = item.path("zipCd").asText(null);
             if (zipCodes != null && !zipCodes.isBlank()) {
                 String[] codes = zipCodes.split(",");
                 for (String code : codes) {
                     String regionName = regionCodeMapper.getRegionName(code.trim());
                     if (regionName != null) {
-                        regionNames.add(regionName);
+                        String topLevelRegion = extractTopLevel(regionName); // 시/도 단위 추출
+                        regionSet.add(topLevelRegion);
                     }
                 }
             }
@@ -366,7 +380,7 @@ public class YouthPolicyService {
             return PolicyResponseDTO.YouthPolicyDetailResponse.builder()
                     .plcyNo(item.path("plcyNo").asText(null))
                     .plcyNm(item.path("plcyNm").asText(null))
-                    .regions(regionNames)
+                    .regions(regionSet)
                     .aplyUrlAddr(item.path("aplyUrlAddr").asText(null))
                     .plcyExplnCn(item.path("plcyExplnCn").asText(null))
                     .plcySprtCn(item.path("plcySprtCn").asText(null))
@@ -386,6 +400,7 @@ public class YouthPolicyService {
                     .srngMthdCn(item.path("srngMthdCn").asText(null))
                     .frstRegDt(item.path("frstRegDt").asText(null))
                     .lastMdfcnDt(item.path("lastMdfcnDt").asText(null))
+                    .lclsfNm(item.path("lclsfNm").asText(null))
                     .build();
 
         } catch (PolicyException e) {
@@ -394,6 +409,7 @@ public class YouthPolicyService {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
     }
+
 
     // 댓글 작성
     @Transactional
@@ -505,6 +521,103 @@ public class YouthPolicyService {
     // 정책 좋아요 개수 조회
     public long getLikeCount(String plcyNo) {
         return policyLikeRepository.countByPlcyNo(plcyNo);
+    }
+
+    // 정책 검색
+    public PolicyResponseDTO.PolicySearchListResponse searchPoliciesByCategory(
+            List<String> categories, int pageNum, int pageSize) {
+        try {
+            Set<String> seen = new HashSet<>();
+            List<PolicyResponseDTO.YouthPolicySearchResponse> results = new ArrayList<>();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            for (String category : categories) {
+                String url = baseUrl
+                        + "?apiKeyNm=" + apiKey
+                        + "&rtnType=json"
+                        + "&pageNum=" + pageNum
+                        + "&pageSize=" + pageSize
+                        + "&lclsfNm=" + category;
+
+                String response = restTemplate.getForObject(url, String.class);
+                if (response == null || response.isBlank()) {
+                    continue;
+                }
+
+                JsonNode root = objectMapper.readTree(response);
+                JsonNode resultNode = root.path("result");
+                JsonNode items = resultNode.path("youthPolicyList");
+
+                if (items.isMissingNode() || !items.isArray()) {
+                    continue;
+                }
+
+                for (JsonNode item : items) {
+                    String plcyNo = item.path("plcyNo").asText(null);
+                    if (plcyNo != null && seen.add(plcyNo)) { // 중복 제거
+
+                        Set<String> regionSet = new HashSet<>();
+                        String zipCodes = item.path("zipCd").asText(null);
+                        if (zipCodes != null && !zipCodes.isBlank()) {
+                            for (String code : zipCodes.split(",")) {
+                                String regionName = regionCodeMapper.getRegionName(code.trim());
+                                if (regionName != null) {
+                                    regionSet.add(extractTopLevel(regionName));
+                                }
+                            }
+                        }
+
+                        // 좋아요 수
+                        Long likeCount = policyLikeRepository.countByPlcyNo(plcyNo);
+
+                        // 정책 상태 계산
+                        String startDate = item.path("bizPrdBgngYmd").asText(null);
+                        String endDate = item.path("bizPrdEndYmd").asText(null);
+                        PolicyStatus status = calculateStatus(startDate, endDate);
+
+                        results.add(
+                                PolicyResponseDTO.YouthPolicySearchResponse.builder()
+                                        .plcyNo(plcyNo)
+                                        .plcyNm(item.path("plcyNm").asText(null))
+                                        .regionNames(regionSet)
+                                        .frstRegDt(item.path("frstRegDt").asText(null))
+                                        .lclsfNm(item.path("lclsfNm").asText(null))
+                                        .likeCount(likeCount)
+                                        .status(status)
+                                        .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
+                                        .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                        .build()
+                        );
+                    }
+                }
+            }
+
+            if (results.isEmpty()) {
+                throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
+            }
+
+            // 최신순 정렬
+            results.sort(
+                    Comparator.comparing(
+                                    (PolicyResponseDTO.YouthPolicySearchResponse p) ->
+                                            LocalDateTime.parse(p.getFrstRegDt(), formatter))
+                            .reversed()
+                            .thenComparing(PolicyResponseDTO.YouthPolicySearchResponse::getPlcyNm,
+                                    Comparator.nullsLast(String::compareTo))
+            );
+
+            return PolicyResponseDTO.PolicySearchListResponse.builder()
+                    .totalCount(results.size())
+                    .policies(results)
+                    .build();
+
+        } catch (PolicyException e) {
+            throw e;
+        } catch (IllegalArgumentException e) {
+            throw new PolicyException(ErrorStatus.POLICY_INVALID_REQUEST);
+        } catch (Exception e) {
+            throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
+        }
     }
 
     /**

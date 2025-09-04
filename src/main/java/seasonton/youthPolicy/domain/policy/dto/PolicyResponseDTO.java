@@ -18,9 +18,14 @@ public class PolicyResponseDTO {
     @Builder
     public static class YouthPolicyResponse {
         private String plcyNo;             // 정책 코드
-        private String plcyNm;
-        private List<String> regionNames;
-        private String frstRegDt;
+        private String plcyNm;             // 정책명
+        private Set<String> regionNames;   // 시/도 단위 지역
+        private String frstRegDt;          // 등록일
+        private String lclsfNm;            // 대분류명
+        private Long likeCount;            // 좋아요 수
+        private PolicyStatus status;       // 진행 상태
+        private String startDate;          // 시작일
+        private String endDate;            // 종료일
     }
 
     // 좋아요 순 조회
@@ -31,9 +36,13 @@ public class PolicyResponseDTO {
     public static class YouthPolicyLikeResponse {
         private String plcyNo;
         private String plcyNm;
-        private List<String> regionNames;
-        private String frstRegDt;   // 등록일
-        private Long likeCount;     // 추가
+        private Set<String> regionNames;   // 시/도 단위 지역
+        private String frstRegDt;          // 등록일
+        private String lclsfNm;            // 대분류명
+        private Long likeCount;            // 좋아요 수
+        private PolicyStatus status;       // 진행 상태
+        private String startDate;          // 시작일
+        private String endDate;            // 종료일
     }
 
 
@@ -68,7 +77,7 @@ public class PolicyResponseDTO {
 
         private String plcyNo;             // 정책 코드
         private String plcyNm;             // 정책명
-        private List<String> regions;      // 변환된 지역명 리스트
+        private Set<String> regions;      // 변환된 지역명 리스트
         private String aplyUrlAddr;        // 신청 주소
         private String plcyExplnCn;        // 정책 설명
         private String plcySprtCn;         // 지원 내용
@@ -88,6 +97,7 @@ public class PolicyResponseDTO {
         private String srngMthdCn;         // 심사 방법
         private String frstRegDt;          // 최초 등록일시
         private String lastMdfcnDt;        // 최종 수정일시
+        private String lclsfNm;            // 대분류
     }
 
     // 정책 댓글 조회
@@ -126,6 +136,51 @@ public class PolicyResponseDTO {
     public static class ReplyDeleteResponse {
         private Long id;          // 삭제된 댓글 ID
         private String message;   // 삭제 성공 메시지
+    }
+
+    // 정책 검색
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class YouthPolicySearchResponse {
+        private String plcyNo;             // 정책 코드
+        private String plcyNm;             // 정책명
+        private Set<String> regionNames;   // 시/도 단위 지역
+        private String frstRegDt;          // 등록일
+        private String lclsfNm;            // 대분류명
+        private Long likeCount;            // 좋아요 수
+        private PolicyStatus status;       // 정책 진행 상태 (예정/진행중/종료/상시)
+        private String startDate;          // 시작일
+        private String endDate;            // 종료일
+    }
+
+    // 총 불러온 정책 수 카운트
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PolicyListResponse {
+        private int totalCount;
+        private List<PolicyResponseDTO.YouthPolicyResponse> policies; // 정책 리스트
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PolicyLikeListResponse {
+        private int totalCount;
+        private List<PolicyResponseDTO.YouthPolicyLikeResponse> policies; // 정책 리스트
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PolicySearchListResponse {
+        private int totalCount;   // 검색된 정책 수
+        private List<PolicyResponseDTO.YouthPolicySearchResponse> policies;
     }
 
 
