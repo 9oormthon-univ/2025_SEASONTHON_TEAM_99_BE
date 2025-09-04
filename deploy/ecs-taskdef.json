@@ -15,22 +15,17 @@
         { "containerPort": 8080, "protocol": "tcp" }
       ],
       "environment": [
-        { "name": "SPRING_PROFILES_ACTIVE", "value": "" },
-
-        { "name": "DB_USERNAME", "value": "" },
-        { "name": "DB_URL", "value": "" },
-
-        { "name": "YOUTH_POLICY_URL", "value": "" },
-
-        { "name": "S3_BUCKET", "value": "" },
-        { "name": "S3_REGION", "value": "" },
-        { "name": "S3_USER_DIR", "value": "" },
-        { "name": "S3_POST_DIR", "value": "" }
+        { "name": "DB_URL", "value": "jdbc:mysql://seasonton.ctmm2cyosp8o.ap-northeast-2.rds.amazonaws.com:3306/seasonton" },
+        { "name": "MINIO_URL", "value": "https://s3.ap-northeast-2.amazonaws.com" },
+        { "name": "YOUTH_POLICY_URL", "value": "https://www.youthcenter.go.kr/go/ythip/getPlcy" }
       ],
       "secrets": [
-        { "name": "DB_PASSWORD", "valueFrom": "" },
-        { "name": "JWT_SECRET_KEY", "valueFrom": "" },
-        { "name": "YOUTH_POLICY_KEY", "valueFrom": "" }
+        { "name": "DB_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
+        { "name": "DB_USERNAME", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
+        { "name": "JWT_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
+        { "name": "MINIO_ACCESS_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
+        { "name": "MINIO_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
+        { "name": "YOUTH_POLICY_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -43,4 +38,3 @@
     }
   ]
 }
-
