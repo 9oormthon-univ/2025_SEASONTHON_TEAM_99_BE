@@ -20,12 +20,12 @@
         { "name": "YOUTH_POLICY_URL", "value": "https://www.youthcenter.go.kr/go/ythip/getPlcy" }
       ],
       "secrets": [
-        { "name": "DB_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
-        { "name": "DB_USERNAME", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
-        { "name": "JWT_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
-        { "name": "MINIO_ACCESS_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
-        { "name": "MINIO_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" },
-        { "name": "YOUTH_POLICY_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7" }
+        { "name": "DB_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:DB_PASSWORD::" },
+        { "name": "DB_USERNAME", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:DB_USERNAME::" },
+        { "name": "JWT_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:JWT_SECRET_KEY::" },
+        { "name": "MINIO_ACCESS_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:MINIO_ACCESS_KEY::" },
+        { "name": "MINIO_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:MINIO_SECRET_KEY::" },
+        { "name": "YOUTH_POLICY_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:YOUTH_POLICY_KEY::" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
