@@ -14,6 +14,24 @@
       "portMappings": [
         { "containerPort": 8080, "protocol": "tcp" }
       ],
+      "environment": [
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "" },
+
+        { "name": "DB_USERNAME", "value": "" },
+        { "name": "DB_URL", "value": "" },
+
+        { "name": "YOUTH_POLICY_URL", "value": "" },
+
+        { "name": "S3_BUCKET", "value": "" },
+        { "name": "S3_REGION", "value": "" },
+        { "name": "S3_USER_DIR", "value": "" },
+        { "name": "S3_POST_DIR", "value": "" }
+      ],
+      "secrets": [
+        { "name": "DB_PASSWORD", "valueFrom": "" },
+        { "name": "JWT_SECRET_KEY", "valueFrom": "" },
+        { "name": "YOUTH_POLICY_KEY", "valueFrom": "" }
+      ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
@@ -25,3 +43,4 @@
     }
   ]
 }
+
