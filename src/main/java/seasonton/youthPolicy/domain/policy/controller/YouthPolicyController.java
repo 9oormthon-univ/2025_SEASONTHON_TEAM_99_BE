@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
@@ -32,10 +31,9 @@ public class YouthPolicyController {
                     "한 페이지에 10개씩 페이징됩니다."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "정책 목록 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 (PolicyException.POLICY_INVALID_REQUEST)"),
-            @ApiResponse(responseCode = "404", description = "정책을 찾을 수 없음 (PolicyException.POLICY_NOT_FOUND)"),
-            @ApiResponse(responseCode = "500", description = "정책 API 호출 실패 (PolicyException.POLICY_API_ERROR)")
+            @ApiResponse(responseCode = "POLICY_200", description = "정책 목록 조회 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음"),
+            @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 실패")
     })
     public BaseResponse<List<PolicyResponseDTO.YouthPolicyResponse>> getPolicies(
             @RequestParam(defaultValue = "1") int pageNum,
@@ -49,8 +47,8 @@ public class YouthPolicyController {
     @GetMapping("/policies/{plcy-no}/status")
     @Operation(summary = "정책 진행 상태 조회", description = "정책의 진행 상태(진행전/진행중/완료)를 반환합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "정책 상태 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "정책을 찾을 수 없음")
+            @ApiResponse(responseCode = "POLICY_200", description = "정책 상태 조회 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음")
     })
     public BaseResponse<PolicyResponseDTO.PolicyStatusResponse> getPolicyStatus(
             @PathVariable("plcy-no") String plcyNo) {
@@ -62,9 +60,9 @@ public class YouthPolicyController {
     @GetMapping("/policies/{plcy-no}/regions")
     @Operation(summary = "정책 지역 단일 조회", description = "정책번호로 해당 정책의 시행 지역(시/도 단위)을 반환합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "정책 지역 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "정책을 찾을 수 없음"),
-            @ApiResponse(responseCode = "500", description = "정책 API 호출 오류")
+            @ApiResponse(responseCode = "REGION_200", description = "정책 지역 조회 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음"),
+            @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 오류")
     })
     public BaseResponse<PolicyResponseDTO.PolicyRegionResponse> getPolicyRegionsByNo(
             @PathVariable("plcy-no") String plcyNo) {
@@ -81,9 +79,9 @@ public class YouthPolicyController {
                     + "정책명은 공공데이터 API에 등록된 정확한 값과 일치해야 합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "정책 상세 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 정책"),
-            @ApiResponse(responseCode = "500", description = "정책 API 호출 오류")
+            @ApiResponse(responseCode = "POLICY_200", description = "정책 상세 조회 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "존재하지 않는 정책"),
+            @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 오류")
     })
     public BaseResponse<PolicyResponseDTO.YouthPolicyDetailResponse> getPolicyDetail(
             @RequestParam String plcyNm) {
@@ -96,9 +94,8 @@ public class YouthPolicyController {
     @PostMapping("/policies/create")
     @Operation(summary = "정책 댓글 작성", description = "특정 정책에 댓글을 작성합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "댓글 작성 성공"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 유저"),
-            @ApiResponse(responseCode = "500", description = "서버 오류")
+            @ApiResponse(responseCode = "REPLY_201", description = "댓글 작성 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
     })
     public BaseResponse<PolicyResponseDTO.Reply> PolicyCreateReply(
             @AuthenticationPrincipal UserPrincipal userPrincipal ,
@@ -113,12 +110,11 @@ public class YouthPolicyController {
     @GetMapping("/policies/reply-list")
     @Operation(summary = "정책 댓글 조회", description = "정책 번호(plcyNo)로 해당 정책의 댓글을 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "댓글 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "댓글 없음"),
+            @ApiResponse(responseCode = "REPLY_200", description = "댓글 조회 성공")
     })
     public BaseResponse<List<PolicyResponseDTO.Reply>> getReplies(@RequestParam String plcyNo) {
         return BaseResponse.onSuccess(
-                SuccessStatus.REPLY_READ_SUCCESS,
+                SuccessStatus.POLICY_REPLY_READ_SUCCESS,
                 youthPolicyService.getReplies(plcyNo)
         );
     }
@@ -126,6 +122,12 @@ public class YouthPolicyController {
     // 댓글 수정
     @PatchMapping("/policies/replies/{reply-id}")
     @Operation(summary = "정책 댓글 수정", description = "작성한 댓글을 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "REPLY_200", description = "댓글 수정 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "해당 유저가 존재하지 않습니다"),
+            @ApiResponse(responseCode = "REPLY_4001", description = "존재하지 않는 댓글"),
+            @ApiResponse(responseCode = "REPLY_4002", description = "삭제 권한 없음"),
+    })
     public BaseResponse<PolicyResponseDTO.ReplyUpdateResponse> updateReply(
             @PathVariable("reply-id") Long replyId,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
@@ -140,9 +142,9 @@ public class YouthPolicyController {
     @DeleteMapping("/policies/replies/{reply-id}")
     @Operation(summary = "정책 댓글 삭제", description = "작성한 댓글을 삭제합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "댓글 삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "삭제 권한 없음"),
-            @ApiResponse(responseCode = "404", description = "댓글 없음"),
+            @ApiResponse(responseCode = "REPLY_204", description = "댓글 삭제 성공"),
+            @ApiResponse(responseCode = "REPLY_4002", description = "삭제 권한 없음"),
+            @ApiResponse(responseCode = "REPLY_4001", description = "존재하지 않는 댓글"),
     })
     public BaseResponse<PolicyResponseDTO.ReplyDeleteResponse> deleteReply(
             @PathVariable("reply-id") Long replyId,
@@ -158,27 +160,25 @@ public class YouthPolicyController {
     @PostMapping("/{plcy-no}/like")
     @Operation(summary = "정책 좋아요 토글", description = "특정 정책에 대해 좋아요를 추가하거나 취소합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "좋아요 토글 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "404", description = "존재하지 않는 유저")
+            @ApiResponse(responseCode = "LIKE_200", description = "좋아요 토글 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저")
     })
     public BaseResponse<String> toggleLike(
             @PathVariable("plcy-no") String plcyNo,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         String message = youthPolicyService.toggleLike(userPrincipal.getId(), plcyNo);
-        return BaseResponse.onSuccess(SuccessStatus.LIKE_TOGGLE_SUCCESS, message);
+        return BaseResponse.onSuccess(SuccessStatus.POLICY_LIKE_TOGGLE_SUCCESS, message);
     }
 
     // 정책 좋아요 갯수 조회
     @GetMapping("/{plcy-no}/likes")
     @Operation(summary = "정책 좋아요 수 조회", description = "특정 정책의 좋아요 개수를 조회합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "좋아요 수 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
+            @ApiResponse(responseCode = "LIKE_200", description = "해당 정책의 좋아요 갯수 조회 완료")
     })
     public BaseResponse<Long> getLikeCount(@PathVariable("plcy-no") String plcyNo) {
         long count = youthPolicyService.getLikeCount(plcyNo);
-        return BaseResponse.onSuccess(SuccessStatus.LIKE_COUNT_SUCCESS, count);
+        return BaseResponse.onSuccess(SuccessStatus.POLICY_LIKE_COUNT_SUCCESS, count);
     }
 }
