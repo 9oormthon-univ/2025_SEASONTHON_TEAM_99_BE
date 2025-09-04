@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -12,7 +11,10 @@ import seasonton.youthPolicy.domain.member.domain.entity.User;
 import seasonton.youthPolicy.domain.member.domain.repository.UserRepository;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyLike;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyReply;
+import seasonton.youthPolicy.domain.policy.domain.enums.EarnConditionCode;
+import seasonton.youthPolicy.domain.policy.domain.enums.JobCode;
 import seasonton.youthPolicy.domain.policy.domain.enums.PolicyStatus;
+import seasonton.youthPolicy.domain.policy.domain.enums.SchoolCode;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyLikeRepository;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyReplyRepository;
 import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
@@ -22,8 +24,6 @@ import seasonton.youthPolicy.domain.policy.exception.PolicyException;
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -341,7 +341,6 @@ public class YouthPolicyService {
     }
 
     // 정책 상세보기
-    // 정책 상세보기
     public PolicyResponseDTO.YouthPolicyDetailResponse getPolicyDetailByName(String plcyNm) {
         try {
             String url = baseUrl
@@ -377,6 +376,7 @@ public class YouthPolicyService {
                 }
             }
 
+
             return PolicyResponseDTO.YouthPolicyDetailResponse.builder()
                     .plcyNo(item.path("plcyNo").asText(null))
                     .plcyNm(item.path("plcyNm").asText(null))
@@ -389,9 +389,9 @@ public class YouthPolicyService {
                     .sprtTrgtMinAge(item.hasNonNull("sprtTrgtMinAge") ? item.get("sprtTrgtMinAge").asInt() : null)
                     .sprtTrgtMaxAge(item.hasNonNull("sprtTrgtMaxAge") ? item.get("sprtTrgtMaxAge").asInt() : null)
                     .sprtTrgtAgeLmtYn(item.path("sprtTrgtAgeLmtYn").asText(null))
-                    .schoolCd(item.path("schoolCd").asText(null))
-                    .jobCd(item.path("jobCd").asText(null))
-                    .earnCndSeCd(item.path("earnCndSeCd").asText(null))
+                    .schoolCd(SchoolCode.fromCode(item.path("schoolCd").asText(null)))
+                    .jobCd(JobCode.fromCode(item.path("jobCd").asText(null)))
+                    .earnCndSeCd(EarnConditionCode.fromCode(item.path("earnCndSeCd").asText(null)))
                     .earnMinAmt(item.hasNonNull("earnMinAmt") ? item.get("earnMinAmt").asInt() : null)
                     .earnMaxAmt(item.hasNonNull("earnMaxAmt") ? item.get("earnMaxAmt").asInt() : null)
                     .earnEtcCn(item.path("earnEtcCn").asText(null))
@@ -401,6 +401,9 @@ public class YouthPolicyService {
                     .frstRegDt(item.path("frstRegDt").asText(null))
                     .lastMdfcnDt(item.path("lastMdfcnDt").asText(null))
                     .lclsfNm(item.path("lclsfNm").asText(null))
+                    .startDate(item.path("bizPrdBgngYmd").asText(null))
+                    .endDate(item.path("bizPrdEndYmd").asText(null))
+                    .aplyYmd(item.path("aplyYmd").asText(null))
                     .build();
 
         } catch (PolicyException e) {

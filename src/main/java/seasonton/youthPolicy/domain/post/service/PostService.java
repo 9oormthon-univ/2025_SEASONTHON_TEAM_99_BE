@@ -6,12 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import seasonton.youthPolicy.domain.post.converter.PostConverter;
-import seasonton.youthPolicy.domain.post.domain.entity.PostImage;
-import seasonton.youthPolicy.domain.post.domain.entity.Posts;
-import seasonton.youthPolicy.domain.post.domain.entity.Reply;
-import seasonton.youthPolicy.domain.post.domain.repository.PostImageRepository;
-import seasonton.youthPolicy.domain.post.domain.repository.PostRepository;
-import seasonton.youthPolicy.domain.post.domain.repository.ReplyRepository;
+import seasonton.youthPolicy.domain.post.domain.entity.*;
+import seasonton.youthPolicy.domain.post.domain.repository.*;
 import seasonton.youthPolicy.domain.post.dto.PostRequestDTO;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
 import seasonton.youthPolicy.domain.post.exception.PostException;
@@ -37,6 +33,8 @@ public class PostService {
     private final UserRepository userRepository;
     private final ReplyRepository replyRepository;
     private final RegionRepository regionRepository;
+    private final PostLikeRepository postLikeRepository;
+    private final ReplyLikeRepository replyLikeRepository;
 
     @Value("${minio.dir.post-image}")
     private String postDIr;
@@ -49,7 +47,9 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
 
-        Region region = user.getRegion();
+        // regionId로 지역 정보 조회
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND));
 
         Posts post = Posts.builder()
                 .title(title)
@@ -73,6 +73,21 @@ public class PostService {
                 .map(PostConverter::toPostListResponse) // 여기서 컨버터 사용
                 .toList();
 
+    }
+
+    // 지역 기반 글 목록 조회
+    public List<PostResponseDTO.PostRegionListResponse> getPostsByRegion(Long regionId) {
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND));
+
+        return postRepository.findByRegion(region).stream()
+                .map(post -> PostResponseDTO.PostRegionListResponse.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .regionName(region.getRegionName())
+                        .createdAt(post.getCreatedAt())
+                        .build())
+                .toList();
     }
 
     // 글 상세 조회
@@ -246,4 +261,52 @@ public class PostService {
         }
     }
 
+    // 게시글 좋아요
+    @Transactional
+    public String togglePostLike(Long userId, Long postId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        PostLike existing = postLikeRepository.findByUserAndPost(user, post)
+                .orElse(null);
+
+        if (existing != null) {
+            postLikeRepository.delete(existing);
+            return "게시글 좋아요 취소됨";
+        } else {
+            PostLike like = PostLike.builder()
+                    .user(user)
+                    .post(post)
+                    .build();
+            postLikeRepository.save(like);
+            return "게시글 좋아요 추가됨";
+        }
+    }
+
+    // 댓글 좋아요
+    @Transactional
+    public String toggleReplyLike(Long userId, Long replyId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Reply reply = replyRepository.findById(replyId)
+                .orElseThrow(() -> new PostException(ErrorStatus.REPLY_NOT_FOUND));
+
+        ReplyLike existing = replyLikeRepository.findByUserAndReply(user, reply).orElse(null);
+
+        if (existing != null) {
+            replyLikeRepository.delete(existing);
+            return "댓글 좋아요 취소됨";
+        } else {
+            ReplyLike like = ReplyLike.builder()
+                    .user(user)
+                    .reply(reply)
+                    .build();
+            replyLikeRepository.save(like);
+            return "댓글 좋아요 추가됨";
+        }
+    }
 }
