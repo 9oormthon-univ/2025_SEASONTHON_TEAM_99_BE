@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import seasonton.youthPolicy.domain.post.dto.PostRequestDTO;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
 import seasonton.youthPolicy.domain.post.service.PostService;
+import seasonton.youthPolicy.global.auth.UserPrincipal;
 import seasonton.youthPolicy.global.common.response.BaseResponse;
 import seasonton.youthPolicy.global.error.code.status.SuccessStatus;
 
@@ -44,13 +46,12 @@ public class PostController {
             @RequestParam Long regionId,
             @RequestParam boolean isAnonymous,
             @RequestPart("imageFile") List<MultipartFile> imageFile,
-            Authentication auth
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        var details = (java.util.Map<?, ?>) auth.getDetails();
-        Long userId = (Long) details.get("userId");
-        PostResponseDTO.PostCreateResponse response = postService.createPost(userId, title, content, regionId, isAnonymous, imageFile);
-        return BaseResponse.onSuccess(SuccessStatus.POST_CREATE_SUCCESS, response);
+        PostResponseDTO.PostCreateResponse response = postService.createPost(
+                userPrincipal.getId(), title, content, regionId, isAnonymous, imageFile);
 
+        return BaseResponse.onSuccess(SuccessStatus.POST_CREATE_SUCCESS, response);
     }
 
     // 글 목록 조회
@@ -96,15 +97,17 @@ public class PostController {
             @ApiResponse(responseCode = "REGION_4001", description = "존재하지 않는 지역")
     })
     public BaseResponse<PostResponseDTO.PostUpdateResponse> updatePost(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable("post-id") Long postId,
-            @RequestParam Long userId,
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam Long regionId,
             @RequestParam boolean isAnonymous,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ) {
-        PostResponseDTO.PostUpdateResponse response = postService.updatePost(title,content,regionId,isAnonymous, postId, userId, newImages);
+        PostResponseDTO.PostUpdateResponse response = postService.updatePost(
+                title,content,regionId,isAnonymous, postId, userPrincipal.getId(), newImages);
+
         return BaseResponse.onSuccess(SuccessStatus.POST_UPDATE_SUCCESS, response);
     }
 
@@ -118,9 +121,9 @@ public class PostController {
     })
     public BaseResponse<String> deletePost(
             @PathVariable("post-id") Long postId,
-            @RequestParam Long userId
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        postService.deletePost(postId, userId);
+        postService.deletePost(postId, userPrincipal.getId());
         return BaseResponse.onSuccess(SuccessStatus.POST_DELETE_SUCCESS, "게시글이 삭제되었습니다.");
     }
 
@@ -137,10 +140,10 @@ public class PostController {
     })
     public BaseResponse<PostResponseDTO.ReplyCreateResponse> createReply(
             @PathVariable("post-id") Long postId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody @Valid PostRequestDTO.ReplyCreateRequest request
     ) {
-        PostResponseDTO.ReplyCreateResponse response = postService.createReply(request, userId, postId);
+        PostResponseDTO.ReplyCreateResponse response = postService.createReply(request, userPrincipal.getId(), postId);
         return BaseResponse.onSuccess(SuccessStatus.POST_REPLY_CREATE_SUCCESS, response);
     }
 
@@ -171,10 +174,10 @@ public class PostController {
     })
     public BaseResponse<PostResponseDTO.ReplyUpdateResponse> updateReply(
             @PathVariable("reply-id") Long replyId,
-            @RequestParam Long userId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody @Valid PostRequestDTO.ReplyUpdateRequest request
     ) {
-        PostResponseDTO.ReplyUpdateResponse response = postService.updateReply(replyId, userId, request);
+        PostResponseDTO.ReplyUpdateResponse response = postService.updateReply(replyId, userPrincipal.getId(), request);
         return BaseResponse.onSuccess(SuccessStatus.REPLY_UPDATE_SUCCESS, response);
     }
 
@@ -189,9 +192,9 @@ public class PostController {
     })
     public BaseResponse<String> deleteReply(
             @PathVariable("reply-id") Long replyId,
-            @RequestParam Long userId
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        postService.deleteReply(replyId, userId);
+        postService.deleteReply(replyId, userPrincipal.getId());
         return BaseResponse.onSuccess(SuccessStatus.REPLY_DELETE_SUCCESS, "댓글이 삭제되었습니다.");
     }
 
