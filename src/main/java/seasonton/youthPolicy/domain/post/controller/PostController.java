@@ -198,4 +198,5 @@ public class PostController {
         return BaseResponse.onSuccess(SuccessStatus.REPLY_DELETE_SUCCESS, "댓글이 삭제되었습니다.");
     }
 
+    // 좋아요 순 보기
 }

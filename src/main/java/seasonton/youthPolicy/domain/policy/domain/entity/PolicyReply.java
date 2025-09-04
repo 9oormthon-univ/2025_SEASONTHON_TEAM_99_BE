@@ -32,8 +32,4 @@ public class PolicyReply extends BaseEntity {
         this.content = content;
         this.isAnonymous = isAnonymous;
     }
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "policy_id", nullable = false)
-//    private Policy policy;
 }

@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class PolicyResponseDTO {
 
-    // 최신 순 보기
+    // 최신 순 조회
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -22,6 +22,20 @@ public class PolicyResponseDTO {
         private List<String> regionNames;
         private String frstRegDt;
     }
+
+    // 좋아요 순 조회
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class YouthPolicyLikeResponse {
+        private String plcyNo;
+        private String plcyNm;
+        private List<String> regionNames;
+        private String frstRegDt;   // 등록일
+        private Long likeCount;     // 추가
+    }
+
 
     // 정책 진행 상태
     @Getter
