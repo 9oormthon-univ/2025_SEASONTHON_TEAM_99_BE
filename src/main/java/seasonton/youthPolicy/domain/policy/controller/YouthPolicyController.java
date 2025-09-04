@@ -35,11 +35,11 @@ public class YouthPolicyController {
             @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음"),
             @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 실패")
     })
-    public BaseResponse<List<PolicyResponseDTO.YouthPolicyResponse>> getPolicies(
+    public BaseResponse<PolicyResponseDTO.PolicyListResponse> getPolicies(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
 
-        List<PolicyResponseDTO.YouthPolicyResponse> data = youthPolicyService.getPolicies(pageNum, pageSize);
+        PolicyResponseDTO.PolicyListResponse data = youthPolicyService.getPolicies(pageNum, pageSize);
         return BaseResponse.onSuccess(SuccessStatus.POLICY_READ_SUCCESS, data);
     }
 
@@ -56,11 +56,11 @@ public class YouthPolicyController {
             @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음"),
             @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 실패")
     })
-    public BaseResponse<List<PolicyResponseDTO.YouthPolicyLikeResponse>> getPoliciesOrderByLikes(
+    public BaseResponse<PolicyResponseDTO.PolicyLikeListResponse> getPoliciesOrderByLikes(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
 
-        List<PolicyResponseDTO.YouthPolicyLikeResponse> data =
+        PolicyResponseDTO.PolicyLikeListResponse data =
                 youthPolicyService.getPoliciesOrderByLikes(pageNum, pageSize);
 
         return BaseResponse.onSuccess(SuccessStatus.POLICY_READ_SUCCESS, data);
@@ -205,4 +205,29 @@ public class YouthPolicyController {
         long count = youthPolicyService.getLikeCount(plcyNo);
         return BaseResponse.onSuccess(SuccessStatus.POLICY_LIKE_COUNT_SUCCESS, count);
     }
+
+    // 정책 검색
+    @GetMapping("/policies/search")
+    @Operation(
+            summary = "정책 검색 (대분류 기준)",
+            description = "대분류(lclsfNm) 기준으로 정책을 검색합니다. " +
+                    "여러 개의 대분류를 콤마(,)로 구분하여 전달할 수 있습니다. " +
+                    "검색 결과는 기본적으로 최신순으로 정렬됩니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "POLICY_200", description = "정책 검색 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음"),
+            @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 실패")
+    })
+    public BaseResponse<PolicyResponseDTO.PolicySearchListResponse> searchPoliciesByCategory(
+            @RequestParam List<String> categories,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        PolicyResponseDTO.PolicySearchListResponse data =
+                youthPolicyService.searchPoliciesByCategory(categories, pageNum, pageSize);
+
+        return BaseResponse.onSuccess(SuccessStatus.POLICY_READ_SUCCESS, data);
+    }
+
 }
