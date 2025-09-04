@@ -43,6 +43,30 @@ public class YouthPolicyController {
         return BaseResponse.onSuccess(SuccessStatus.POLICY_READ_SUCCESS, data);
     }
 
+    // 정책 좋아요 순 조회
+    @GetMapping("/policies/likes")
+    @Operation(
+            summary = "정책 목록 좋아요순 조회",
+            description = "정책 제목과 거주지역 코드, 등록일, 좋아요 개수를 반환합니다. " +
+                    "좋아요 개수 기준으로 정렬되며, 동률일 경우 정책명이 가나다순으로 정렬됩니다. " +
+                    "한 페이지에 10개씩 페이징됩니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "POLICY_200", description = "정책 목록 조회 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "정책을 찾을 수 없음"),
+            @ApiResponse(responseCode = "POLICY_4004", description = "정책 API 호출 실패")
+    })
+    public BaseResponse<List<PolicyResponseDTO.YouthPolicyLikeResponse>> getPoliciesOrderByLikes(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        List<PolicyResponseDTO.YouthPolicyLikeResponse> data =
+                youthPolicyService.getPoliciesOrderByLikes(pageNum, pageSize);
+
+        return BaseResponse.onSuccess(SuccessStatus.POLICY_READ_SUCCESS, data);
+    }
+
+
     // 정책 진행 상태 조회
     @GetMapping("/policies/{plcy-no}/status")
     @Operation(summary = "정책 진행 상태 조회", description = "정책의 진행 상태(진행전/진행중/완료)를 반환합니다.")

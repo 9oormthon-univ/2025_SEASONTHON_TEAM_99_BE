@@ -72,7 +72,7 @@ public class YouthPolicyService {
     최종수정일시: lastMdfcnDt
     * */
 
-    // 최신 순 보기
+    // 최신 순 조회
     public List<PolicyResponseDTO.YouthPolicyResponse> getPolicies(int pageNum, int pageSize) {
         try {
             String url = baseUrl
@@ -116,7 +116,7 @@ public class YouthPolicyService {
                 );
             }
 
-            // ✅ 최신순 정렬 (등록일 내림차순, 이름 사전순)
+            // 최신순 정렬 (등록일 내림차순, 이름 사전순)
             results.sort(
                     Comparator.comparing(
                                     (PolicyResponseDTO.YouthPolicyResponse p) ->
@@ -130,7 +130,7 @@ public class YouthPolicyService {
                 throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
             }
 
-            // ✅ 수동 페이징
+            // 수동 페이징
             int fromIndex = (pageNum - 1) * pageSize;
             int toIndex = Math.min(fromIndex + pageSize, results.size());
             if (fromIndex >= results.size()) {
@@ -146,6 +146,99 @@ public class YouthPolicyService {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
     }
+
+    // 좋아요 순 조회
+    public List<PolicyResponseDTO.YouthPolicyLikeResponse> getPoliciesOrderByLikes(int pageNum, int pageSize) {
+        try {
+            // 1. 온통청년 API 호출
+            String url = baseUrl
+                    + "?apiKeyNm=" + apiKey
+                    + "&rtnType=json"
+                    + "&pageNum=" + pageNum
+                    + "&pageSize=" + pageSize;
+
+            String response = restTemplate.getForObject(url, String.class);
+            if (response == null || response.isBlank()) {
+                throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
+            }
+
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode items = root.path("result").path("youthPolicyList");
+
+            if (items.isMissingNode() || !items.isArray()) {
+                throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
+            }
+
+            List<PolicyResponseDTO.YouthPolicyLikeResponse> results = new ArrayList<>();
+
+            for (JsonNode item : items) {
+                String zipCodes = item.path("zipCd").asText(null);
+                List<String> regionNames = new ArrayList<>();
+                if (zipCodes != null) {
+                    for (String code : zipCodes.split(",")) {
+                        regionNames.add(regionCodeMapper.getRegionName(code.trim()));
+                    }
+                }
+
+                results.add(
+                        PolicyResponseDTO.YouthPolicyLikeResponse.builder()
+                                .plcyNo(item.path("plcyNo").asText(null))
+                                .plcyNm(item.path("plcyNm").asText(null))
+                                .regionNames(regionNames)
+                                .frstRegDt(item.path("frstRegDt").asText(null))
+                                .likeCount(0L) // 초기값
+                                .build()
+                );
+            }
+
+            if (results.isEmpty()) {
+                throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
+            }
+
+            // 2. DB에서 전체 정책 좋아요 수 조회
+            List<Object[]> counts = policyLikeRepository.countLikesByPolicy();
+            Map<String, Long> likeCountMap = counts.stream()
+                    .collect(Collectors.toMap(c -> (String)c[0], c -> (Long)c[1]));
+
+            // 3. DTO 다시 생성해서 likeCount 채워넣기
+            List<PolicyResponseDTO.YouthPolicyLikeResponse> enrichedResults = new ArrayList<>();
+            for (PolicyResponseDTO.YouthPolicyLikeResponse p : results) {
+                enrichedResults.add(
+                        PolicyResponseDTO.YouthPolicyLikeResponse.builder()
+                                .plcyNo(p.getPlcyNo())
+                                .plcyNm(p.getPlcyNm())
+                                .regionNames(p.getRegionNames())
+                                .frstRegDt(p.getFrstRegDt())
+                                .likeCount(likeCountMap.getOrDefault(p.getPlcyNo(), 0L))
+                                .build()
+                );
+            }
+
+            // 4. 좋아요순 정렬 (많은 순 → 동률이면 이름 가나다순)
+            enrichedResults.sort(
+                    Comparator.comparing(PolicyResponseDTO.YouthPolicyLikeResponse::getLikeCount).reversed()
+                            .thenComparing(PolicyResponseDTO.YouthPolicyLikeResponse::getPlcyNm,
+                                    Comparator.nullsLast(String::compareTo))
+            );
+
+            // 5. 수동 페이징
+            int fromIndex = (pageNum - 1) * pageSize;
+            int toIndex = Math.min(fromIndex + pageSize, enrichedResults.size());
+            if (fromIndex >= enrichedResults.size()) {
+                return Collections.emptyList();
+            }
+
+            return enrichedResults.subList(fromIndex, toIndex);
+
+        } catch (PolicyException e) {
+            throw e;
+        } catch (IllegalArgumentException e) {
+            throw new PolicyException(ErrorStatus.POLICY_INVALID_REQUEST);
+        } catch (Exception e) {
+            throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
+        }
+    }
+
 
     // 정책 상태 조회
     public PolicyResponseDTO.PolicyStatusResponse getPolicyStatus(String plcyNo) {
