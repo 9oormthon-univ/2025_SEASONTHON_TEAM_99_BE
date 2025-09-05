@@ -181,6 +181,38 @@ public class YouthPolicyController {
         );
     }
 
+    // 댓글 요약
+    @GetMapping("/policies/replies/summary")
+    @Operation(summary = "정책 댓글 요약", description = "정책 번호(plcyNo)로 댓글들을 요약합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "REPLY_200", description = "댓글 요약 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "해당 정책에 댓글 없음"),
+            @ApiResponse(responseCode = "REPLY_200", description = "AI 요약 실패")
+    })
+    public BaseResponse<PolicyResponseDTO.ReplySummaryResponse> getReplySummary(
+            @RequestParam String plcyNo,
+            @RequestParam String plcyNm
+    ) {
+        return BaseResponse.onSuccess(
+                SuccessStatus.POLICY_REPLY_SUMMARY_SUCCESS,
+                youthPolicyService.summarizeReplies(plcyNo, plcyNm)
+        );
+    }
+
+    // 댓글 자동 필터링
+    @DeleteMapping("/policies/replies/auto-delete")
+    @Operation(summary = "이상 댓글 자동 삭제", description = "정책 번호(plcyNo)의 모든 댓글을 검사하여 이상 댓글은 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "REPLY_200", description = "이상 댓글 자동 삭제 성공"),
+            @ApiResponse(responseCode = "POLICY_4001", description = "해당 정책에 댓글 없음"),
+    })
+    public BaseResponse<List<Long>> autoDeleteAbnormalReplies(@RequestParam String plcyNo) {
+        return BaseResponse.onSuccess(
+                SuccessStatus.POLICY_REPLY_DELETE_SUCCESS,
+                youthPolicyService.autoDeleteAbnormalReplies(plcyNo)
+        );
+    }
+
 
     // 정책 좋아요 토글 (추가/취소)
     @PostMapping("/{plcy-no}/like")
@@ -208,7 +240,6 @@ public class YouthPolicyController {
         return BaseResponse.onSuccess(SuccessStatus.POLICY_LIKE_COUNT_SUCCESS, count);
     }
 
-    // 정책 검색
     // 정책 검색
     @GetMapping("/policies/search")
     @Operation(

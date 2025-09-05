@@ -211,5 +211,25 @@ public class PolicyResponseDTO {
         private List<PolicyResponseDTO.YouthPolicySearchResponse> policies;
     }
 
+    // 댓글 요약
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ReplySummaryResponse {
+        private String plcyNo;
+        private String summary; // 요약된 결과
+    }
+
+    // 댓글필터링
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ReplyFilterResponse {
+        private boolean allowed;   // true = 정상 댓글, false = 차단됨
+        private String reason;     // 차단 사유 (AI 응답 요약)
+    }
+
 
 }
