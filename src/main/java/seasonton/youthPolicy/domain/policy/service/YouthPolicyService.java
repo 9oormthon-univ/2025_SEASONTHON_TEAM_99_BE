@@ -132,6 +132,8 @@ public class YouthPolicyService {
                                 .status(status)
                                 .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
                                 .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                                .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                                 .build()
                 );
             }
@@ -149,15 +151,10 @@ public class YouthPolicyService {
                                     Comparator.nullsLast(String::compareTo))
             );
 
-            int fromIndex = (pageNum - 1) * pageSize;
-            int toIndex = Math.min(fromIndex + pageSize, results.size());
-            List<PolicyResponseDTO.YouthPolicyResponse> pageResults =
-                    fromIndex >= results.size() ? Collections.emptyList() : results.subList(fromIndex, toIndex);
-
             // 전체 개수 + 정책 리스트 반환
             return PolicyResponseDTO.PolicyListResponse.builder()
                     .totalCount(totalCount)
-                    .policies(pageResults)
+                    .policies(results)
                     .build();
 
         } catch (Exception e) {
@@ -218,6 +215,8 @@ public class YouthPolicyService {
                                 .status(status)
                                 .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
                                 .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                                .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                                 .build()
                 );
             }
@@ -233,15 +232,9 @@ public class YouthPolicyService {
                                     Comparator.nullsLast(String::compareTo))
             );
 
-            // 페이징 처리
-            int fromIndex = (pageNum - 1) * pageSize;
-            int toIndex = Math.min(fromIndex + pageSize, results.size());
-            List<PolicyResponseDTO.YouthPolicyLikeResponse> pageResults =
-                    fromIndex >= results.size() ? Collections.emptyList() : results.subList(fromIndex, toIndex);
-
             return PolicyResponseDTO.PolicyLikeListResponse.builder()
                     .totalCount(totalCount)
-                    .policies(pageResults)
+                    .policies(results)
                     .build();
 
         } catch (Exception e) {
@@ -404,6 +397,8 @@ public class YouthPolicyService {
                     .startDate(item.path("bizPrdBgngYmd").asText(null))
                     .endDate(item.path("bizPrdEndYmd").asText(null))
                     .aplyYmd(item.path("aplyYmd").asText(null))
+                    .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                    .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                     .build();
 
         } catch (PolicyException e) {
@@ -589,6 +584,8 @@ public class YouthPolicyService {
                                         .status(status)
                                         .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
                                         .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                        .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                                        .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                                         .build()
                         );
                     }
