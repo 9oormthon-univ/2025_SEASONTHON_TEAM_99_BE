@@ -18,7 +18,11 @@ public class PolicyReply extends BaseEntity {
 
     private String content = "no content";
 
+    @Column(nullable = false)
     private boolean isAnonymous;
+
+    @Column(length = 50)
+    private String writer;
 
     private String plcyNo;   // 정책 번호
 
@@ -28,8 +32,9 @@ public class PolicyReply extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public void updateReply(String content, boolean isAnonymous) {
+    public void updateReply(String content, boolean isAnonymous, String writer) {
         this.content = content;
         this.isAnonymous = isAnonymous;
+        this.writer = writer;
     }
 }

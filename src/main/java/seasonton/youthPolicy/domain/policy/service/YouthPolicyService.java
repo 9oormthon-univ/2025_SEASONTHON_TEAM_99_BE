@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -12,7 +11,10 @@ import seasonton.youthPolicy.domain.member.domain.entity.User;
 import seasonton.youthPolicy.domain.member.domain.repository.UserRepository;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyLike;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyReply;
+import seasonton.youthPolicy.domain.policy.domain.enums.EarnConditionCode;
+import seasonton.youthPolicy.domain.policy.domain.enums.JobCode;
 import seasonton.youthPolicy.domain.policy.domain.enums.PolicyStatus;
+import seasonton.youthPolicy.domain.policy.domain.enums.SchoolCode;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyLikeRepository;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyReplyRepository;
 import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
@@ -22,8 +24,6 @@ import seasonton.youthPolicy.domain.policy.exception.PolicyException;
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -132,6 +132,8 @@ public class YouthPolicyService {
                                 .status(status)
                                 .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
                                 .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                                .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                                 .build()
                 );
             }
@@ -149,15 +151,10 @@ public class YouthPolicyService {
                                     Comparator.nullsLast(String::compareTo))
             );
 
-            int fromIndex = (pageNum - 1) * pageSize;
-            int toIndex = Math.min(fromIndex + pageSize, results.size());
-            List<PolicyResponseDTO.YouthPolicyResponse> pageResults =
-                    fromIndex >= results.size() ? Collections.emptyList() : results.subList(fromIndex, toIndex);
-
             // 전체 개수 + 정책 리스트 반환
             return PolicyResponseDTO.PolicyListResponse.builder()
                     .totalCount(totalCount)
-                    .policies(pageResults)
+                    .policies(results)
                     .build();
 
         } catch (Exception e) {
@@ -218,6 +215,8 @@ public class YouthPolicyService {
                                 .status(status)
                                 .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
                                 .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                                .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                                 .build()
                 );
             }
@@ -233,15 +232,9 @@ public class YouthPolicyService {
                                     Comparator.nullsLast(String::compareTo))
             );
 
-            // 페이징 처리
-            int fromIndex = (pageNum - 1) * pageSize;
-            int toIndex = Math.min(fromIndex + pageSize, results.size());
-            List<PolicyResponseDTO.YouthPolicyLikeResponse> pageResults =
-                    fromIndex >= results.size() ? Collections.emptyList() : results.subList(fromIndex, toIndex);
-
             return PolicyResponseDTO.PolicyLikeListResponse.builder()
                     .totalCount(totalCount)
-                    .policies(pageResults)
+                    .policies(results)
                     .build();
 
         } catch (Exception e) {
@@ -341,7 +334,6 @@ public class YouthPolicyService {
     }
 
     // 정책 상세보기
-    // 정책 상세보기
     public PolicyResponseDTO.YouthPolicyDetailResponse getPolicyDetailByName(String plcyNm) {
         try {
             String url = baseUrl
@@ -377,6 +369,7 @@ public class YouthPolicyService {
                 }
             }
 
+
             return PolicyResponseDTO.YouthPolicyDetailResponse.builder()
                     .plcyNo(item.path("plcyNo").asText(null))
                     .plcyNm(item.path("plcyNm").asText(null))
@@ -389,9 +382,9 @@ public class YouthPolicyService {
                     .sprtTrgtMinAge(item.hasNonNull("sprtTrgtMinAge") ? item.get("sprtTrgtMinAge").asInt() : null)
                     .sprtTrgtMaxAge(item.hasNonNull("sprtTrgtMaxAge") ? item.get("sprtTrgtMaxAge").asInt() : null)
                     .sprtTrgtAgeLmtYn(item.path("sprtTrgtAgeLmtYn").asText(null))
-                    .schoolCd(item.path("schoolCd").asText(null))
-                    .jobCd(item.path("jobCd").asText(null))
-                    .earnCndSeCd(item.path("earnCndSeCd").asText(null))
+                    .schoolCd(SchoolCode.fromCode(item.path("schoolCd").asText(null)))
+                    .jobCd(JobCode.fromCode(item.path("jobCd").asText(null)))
+                    .earnCndSeCd(EarnConditionCode.fromCode(item.path("earnCndSeCd").asText(null)))
                     .earnMinAmt(item.hasNonNull("earnMinAmt") ? item.get("earnMinAmt").asInt() : null)
                     .earnMaxAmt(item.hasNonNull("earnMaxAmt") ? item.get("earnMaxAmt").asInt() : null)
                     .earnEtcCn(item.path("earnEtcCn").asText(null))
@@ -401,6 +394,11 @@ public class YouthPolicyService {
                     .frstRegDt(item.path("frstRegDt").asText(null))
                     .lastMdfcnDt(item.path("lastMdfcnDt").asText(null))
                     .lclsfNm(item.path("lclsfNm").asText(null))
+                    .startDate(item.path("bizPrdBgngYmd").asText(null))
+                    .endDate(item.path("bizPrdEndYmd").asText(null))
+                    .aplyYmd(item.path("aplyYmd").asText(null))
+                    .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                    .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                     .build();
 
         } catch (PolicyException e) {
@@ -413,35 +411,36 @@ public class YouthPolicyService {
 
     // 댓글 작성
     @Transactional
-    public PolicyResponseDTO.Reply createReply(Long userId, PolicyRequestDTO.Create request) {
+    public PolicyResponseDTO.ReplyCreateResponse createReply(Long userId, PolicyRequestDTO.Create request, boolean isAnonymous) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
 
         PolicyReply reply = PolicyReply.builder()
                 .content(request.getContent())
-                .isAnonymous(request.isAnonymous())
+                .isAnonymous(isAnonymous)
                 .plcyNo(request.getPlcyNo())
                 .plcyNm(request.getPlcyNm())
+                .writer(isAnonymous ? "익명" : user.getNickname())
                 .user(user)
                 .build();
 
         policyReplyRepository.save(reply);
 
-        return PolicyResponseDTO.Reply.builder()
+        return PolicyResponseDTO.ReplyCreateResponse.builder()
                 .id(reply.getId())
                 .content(reply.getContent())
                 .isAnonymous(reply.isAnonymous())
                 .plcyNo(reply.getPlcyNo())
                 .plcyNm(reply.getPlcyNm())
-                .writer(reply.isAnonymous() ? "익명" : user.getNickname())
+                .writer(reply.getWriter())
                 .build();
     }
 
     // 댓글 조회
-    public List<PolicyResponseDTO.Reply> getReplies(String plcyNo) {
+    public List<PolicyResponseDTO.ReplyListResponse> getReplies(String plcyNo) {
         return policyReplyRepository.findByPlcyNo(plcyNo).stream()
-                .map(reply -> PolicyResponseDTO.Reply.builder()
+                .map(reply -> PolicyResponseDTO.ReplyListResponse.builder()
                         .id(reply.getId())
                         .content(reply.getContent())
                         .isAnonymous(reply.isAnonymous())
@@ -454,7 +453,7 @@ public class YouthPolicyService {
 
     // 댓글 수정
     @Transactional
-    public PolicyResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PolicyRequestDTO.ReplyUpdateRequest request) {
+    public PolicyResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PolicyRequestDTO.ReplyUpdateRequest request, boolean isAnonymous) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
 
@@ -466,7 +465,7 @@ public class YouthPolicyService {
         }
 
         // 엔티티에 업데이트용 메서드 추가해서 상태 변경
-        reply.updateReply(request.getContent(), request.isAnonymous());
+        reply.updateReply(request.getContent(), isAnonymous, isAnonymous ? "익명" : user.getNickname());
 
         return PolicyResponseDTO.ReplyUpdateResponse.builder()
                 .id(reply.getId())
@@ -474,7 +473,7 @@ public class YouthPolicyService {
                 .isAnonymous(reply.isAnonymous())
                 .plcyNo(reply.getPlcyNo())
                 .plcyNm(reply.getPlcyNm())
-                .writer(reply.isAnonymous() ? "익명" : user.getNickname())
+                .writer(reply.getWriter())
                 .build();
     }
 
@@ -586,6 +585,8 @@ public class YouthPolicyService {
                                         .status(status)
                                         .startDate(startDate == null || startDate.isBlank() ? "상시" : startDate)
                                         .endDate(endDate == null || endDate.isBlank() ? "상시" : endDate)
+                                        .bizPrdBgngYmd(item.path("bizPrdBgngYmd").asText(null))
+                                        .bizPrdEndYmd(item.path("bizPrdEndYmd").asText(null))
                                         .build()
                         );
                     }

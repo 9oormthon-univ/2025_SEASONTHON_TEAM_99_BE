@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import seasonton.youthPolicy.domain.model.entity.Region;
 import seasonton.youthPolicy.domain.post.domain.entity.Posts;
 
 import java.util.List;
@@ -32,4 +33,6 @@ public interface PostRepository extends JpaRepository<Posts, Long> {
             Pageable pageable
     );
 
+    List<Posts> findByRegion(Region region);
+           
 }

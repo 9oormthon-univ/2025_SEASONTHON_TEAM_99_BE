@@ -6,14 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import seasonton.youthPolicy.domain.post.converter.PostConverter;
-import seasonton.youthPolicy.domain.post.domain.entity.PostImage;
-import seasonton.youthPolicy.domain.post.domain.entity.Posts;
-import seasonton.youthPolicy.domain.post.domain.entity.Reply;
-import seasonton.youthPolicy.domain.post.domain.repository.PostImageRepository;
-import seasonton.youthPolicy.domain.post.domain.repository.PostRepository;
-import seasonton.youthPolicy.domain.post.domain.repository.ReplyRepository;
+import seasonton.youthPolicy.domain.post.domain.entity.*;
+import seasonton.youthPolicy.domain.post.domain.repository.*;
 import seasonton.youthPolicy.domain.post.dto.PostRequestDTO;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
+import seasonton.youthPolicy.domain.post.dto.VoteRequestDTO;
+import seasonton.youthPolicy.domain.post.dto.VoteResponseDTO;
 import seasonton.youthPolicy.domain.post.exception.PostException;
 import seasonton.youthPolicy.domain.model.entity.Region;
 import seasonton.youthPolicy.domain.member.domain.entity.User;
@@ -24,6 +22,7 @@ import seasonton.youthPolicy.global.dto.S3DTO;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 import seasonton.youthPolicy.global.service.S3Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -37,34 +36,149 @@ public class PostService {
     private final UserRepository userRepository;
     private final ReplyRepository replyRepository;
     private final RegionRepository regionRepository;
+    private final PostLikeRepository postLikeRepository;
+    private final ReplyLikeRepository replyLikeRepository;
+    private final PostVoteRepository postVoteRepository;
 
     @Value("${minio.dir.post-image}")
     private String postDIr;
 
     // 글 작성
     @Transactional
-    public PostResponseDTO.PostCreateResponse createPost(Long userId, String title, String content, Long regionId, boolean isAnonymous, List<MultipartFile> images) {
+    public PostResponseDTO.PostCreateResponse createPost(Long userId, String title, String content,
+                                                         Long regionId, boolean isAnonymous,
+                                                         List<MultipartFile> images,
+                                                         String question, List<String> options,
+                                                         LocalDateTime endDate, boolean multipleChoice) {
 
-        // 유저 검증 및 정보 불러오기
+        // 유저 검증
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
 
-        Region region = user.getRegion();
+        // 지역 검증
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND));
 
+        // 게시글 저장
         Posts post = Posts.builder()
                 .title(title)
                 .content(content)
                 .isAnonymous(isAnonymous)
+                .writer(isAnonymous ? "익명" : user.getNickname())
                 .region(region)
                 .user(user)
                 .build();
 
         postRepository.save(post);
 
-        savePostImages(images, post);
+        // 이미지 저장 (있을 때만)
+        if (images != null && !images.isEmpty()) {
+            savePostImages(images, post);
+        }
 
+        // 투표 저장 (질문/옵션이 있을 경우)
+        if (question != null && !question.isBlank() && options != null && !options.isEmpty()) {
+            PostVote vote = PostVote.builder()
+                    .question(question)
+                    .endDate(endDate)
+                    .multipleChoice(multipleChoice)
+                    .post(post)
+                    .build();
+
+            List<PostVoteOption> optionEntities = options.stream()
+                    .map(opt -> PostVoteOption.builder()
+                            .optionText(opt)
+                            .vote(vote)
+                            .build())
+                    .toList();
+
+            vote.getOptions().addAll(optionEntities);
+
+            postVoteRepository.save(vote);
+        }
+
+        // 응답 반환
         return PostConverter.toPostCreateResponse(post, region);
     }
+
+    // 투표 수정
+    @Transactional
+    public PostResponseDTO.PostUpdateResponse updateVote(Long postId, Long userId,
+                                                         String question, List<String> options, LocalDateTime endDate, boolean multipleChoice) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new PostException(ErrorStatus.POST_FORBIDDEN);
+        }
+
+        PostVote vote = postVoteRepository.findByPost(post)
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        List<PostVoteOption> newOptions = options.stream()
+                .map(opt -> PostVoteOption.builder()
+                        .optionText(opt)
+                        .vote(vote)
+                        .build())
+                .toList();
+
+        // 엔티티 메서드 호출
+        vote.updateVote(question, endDate, multipleChoice, newOptions);
+
+        postVoteRepository.save(vote);
+
+        return PostConverter.toPostUpdateResponse(post);
+    }
+
+    // 투표 조회
+    public VoteResponseDTO.PostVoteResponse getVote(Long postId) {
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        PostVote vote = postVoteRepository.findByPost(post)
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        List<VoteResponseDTO.PostVoteResponse.OptionResponse> optionResponses = vote.getOptions().stream()
+                .map(opt -> VoteResponseDTO.PostVoteResponse.OptionResponse.builder()
+                        .optionId(opt.getId())
+                        .optionText(opt.getOptionText())
+                        .voteCount(opt.getVoteCount())
+                        .build())
+                .toList();
+
+        return VoteResponseDTO.PostVoteResponse.builder()
+                .voteId(vote.getId())
+                .question(vote.getQuestion())
+                .multipleChoice(vote.isMultipleChoice())
+                .endDate(vote.getEndDate())
+                .options(optionResponses)
+                .build();
+    }
+
+    // 투표 삭제
+    @Transactional
+    public void deleteVote(Long postId, Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new PostException(ErrorStatus.POST_FORBIDDEN);
+        }
+
+        PostVote vote = postVoteRepository.findByPost(post)
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        // 삭제 (옵션은 cascade = ALL, orphanRemoval = true 이므로 자동 삭제)
+        postVoteRepository.delete(vote);
+    }
+
 
     // 글 목록 조회
     public List<PostResponseDTO.PostListResponse> getPosts() {
@@ -73,6 +187,21 @@ public class PostService {
                 .map(PostConverter::toPostListResponse) // 여기서 컨버터 사용
                 .toList();
 
+    }
+
+    // 지역 기반 글 목록 조회
+    public List<PostResponseDTO.PostRegionListResponse> getPostsByRegion(Long regionId) {
+        Region region = regionRepository.findById(regionId)
+                .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND));
+
+        return postRepository.findByRegion(region).stream()
+                .map(post -> PostResponseDTO.PostRegionListResponse.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .regionName(region.getRegionName())
+                        .createdAt(post.getCreatedAt())
+                        .build())
+                .toList();
     }
 
     // 글 상세 조회
@@ -85,7 +214,7 @@ public class PostService {
 
     // 댓글 작성
     @Transactional
-    public PostResponseDTO.ReplyCreateResponse createReply(PostRequestDTO.ReplyCreateRequest request, Long userId, Long postId) {
+    public PostResponseDTO.ReplyCreateResponse createReply(PostRequestDTO.ReplyCreateRequest request, Long userId, Long postId, boolean isAnonymous) {
 
         // 유저 정보 조회 및 검증
         User user = userRepository.findById(userId)
@@ -97,7 +226,8 @@ public class PostService {
 
         Reply reply = Reply.builder()
                 .content(request.getContent())
-                .isAnonymous(request.isAnonymous())
+                .isAnonymous(isAnonymous)
+                .writer(isAnonymous ? "익명" : user.getNickname())
                 .user(user)
                 .post(post)
                 .build();
@@ -136,7 +266,7 @@ public class PostService {
                 .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND))
                 : post.getRegion();
 
-        post.updatePost(title, content, isAnonymous, region);
+        post.updatePost(title, content, isAnonymous, isAnonymous ? "익명" : user.getNickname(), region);
 
         // 이미지 교체 로직
         if (newImages != null) {
@@ -186,7 +316,7 @@ public class PostService {
 
     // 댓글 수정
     @Transactional
-    public PostResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PostRequestDTO.ReplyUpdateRequest request) {
+    public PostResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PostRequestDTO.ReplyUpdateRequest request, boolean isAnonymous) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
@@ -199,11 +329,12 @@ public class PostService {
         }
 
         // 수정
-        reply.updateReply(request.getContent(), request.isAnonymous());
+        reply.updateReply(request.getContent(), isAnonymous, isAnonymous ? "익명" : user.getNickname());
 
         return PostConverter.toReplyUpdateResponse(reply);
     }
 
+    // 댓글 삭제
     @Transactional
     public void deleteReply(Long replyId, Long userId) {
         // 유저 검증
@@ -246,4 +377,52 @@ public class PostService {
         }
     }
 
+    // 게시글 좋아요
+    @Transactional
+    public String togglePostLike(Long userId, Long postId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        PostLike existing = postLikeRepository.findByUserAndPost(user, post)
+                .orElse(null);
+
+        if (existing != null) {
+            postLikeRepository.delete(existing);
+            return "게시글 좋아요 취소됨";
+        } else {
+            PostLike like = PostLike.builder()
+                    .user(user)
+                    .post(post)
+                    .build();
+            postLikeRepository.save(like);
+            return "게시글 좋아요 추가됨";
+        }
+    }
+
+    // 댓글 좋아요
+    @Transactional
+    public String toggleReplyLike(Long userId, Long replyId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Reply reply = replyRepository.findById(replyId)
+                .orElseThrow(() -> new PostException(ErrorStatus.REPLY_NOT_FOUND));
+
+        ReplyLike existing = replyLikeRepository.findByUserAndReply(user, reply).orElse(null);
+
+        if (existing != null) {
+            replyLikeRepository.delete(existing);
+            return "댓글 좋아요 취소됨";
+        } else {
+            ReplyLike like = ReplyLike.builder()
+                    .user(user)
+                    .reply(reply)
+                    .build();
+            replyLikeRepository.save(like);
+            return "댓글 좋아요 추가됨";
+        }
+    }
 }

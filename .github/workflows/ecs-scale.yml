@@ -1,0 +1,62 @@
+name: ECS - Start/Stop Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "start=1, stop=0 (필수 선택)"
+        required: true
+        type: choice
+        options:
+          - start
+          - stop
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ecs-scale
+  cancel-in-progress: true
+
+jobs:
+  scale:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-northeast-2
+      ECS_CLUSTER: cheongjeong-cluster
+      ECS_SERVICE: cheongjeong-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS creds (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Decide desired count from mode
+        id: calc
+        shell: bash
+        run: |
+          if [ "${{ inputs.mode }}" = "start" ]; then
+            echo "count=1" >> $GITHUB_OUTPUT
+          else
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+          echo "Desired count = $(cat $GITHUB_OUTPUT | cut -d= -f2)"
+
+      - name: Update service desired count
+        run: |
+          aws ecs update-service \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --service "${{ env.ECS_SERVICE }}" \
+            --desired-count "${{ steps.calc.outputs.count }}"
+
+      - name: Show current desired/running/tasks
+        run: |
+          aws ecs describe-services \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}" \
+            --query 'services[0].{desired:desiredCount,running:runningCount,taskDef:taskDefinition}' \
+            --output table
