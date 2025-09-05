@@ -24,6 +24,8 @@ import seasonton.youthPolicy.domain.policy.exception.PolicyException;
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -523,38 +525,48 @@ public class YouthPolicyService {
     }
 
     // 정책 검색
-    public PolicyResponseDTO.PolicySearchListResponse searchPoliciesByCategory(
-            List<String> categories, int pageNum, int pageSize) {
+    public PolicyResponseDTO.PolicySearchListResponse searchPolicies(
+            List<String> categories, String plcyNm, List<String> regions,
+            int pageNum, int pageSize) {
+
         try {
             Set<String> seen = new HashSet<>();
             List<PolicyResponseDTO.YouthPolicySearchResponse> results = new ArrayList<>();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            // 카테고리가 없으면 전체 조회도 가능하도록 처리
+            if (categories == null || categories.isEmpty()) {
+                categories = List.of(""); // 빈 값으로 전체 조회
+            }
 
             for (String category : categories) {
                 String url = baseUrl
                         + "?apiKeyNm=" + apiKey
                         + "&rtnType=json"
                         + "&pageNum=" + pageNum
-                        + "&pageSize=" + pageSize
-                        + "&lclsfNm=" + category;
+                        + "&pageSize=" + pageSize;
+
+                if (category != null && !category.isBlank()) {
+                    url += "&lclsfNm=" + category;
+                }
+
+                // 정책명 검색 (상세보기랑 동일하게 그대로 붙임)
+                if (plcyNm != null && !plcyNm.isBlank()) {
+                    url += "&plcyNm=" + plcyNm;
+                }
 
                 String response = restTemplate.getForObject(url, String.class);
-                if (response == null || response.isBlank()) {
-                    continue;
-                }
+                if (response == null || response.isBlank()) continue;
 
                 JsonNode root = objectMapper.readTree(response);
-                JsonNode resultNode = root.path("result");
-                JsonNode items = resultNode.path("youthPolicyList");
-
-                if (items.isMissingNode() || !items.isArray()) {
-                    continue;
-                }
+                JsonNode items = root.path("result").path("youthPolicyList");
+                if (items.isMissingNode() || !items.isArray()) continue;
 
                 for (JsonNode item : items) {
                     String plcyNo = item.path("plcyNo").asText(null);
-                    if (plcyNo != null && seen.add(plcyNo)) { // 중복 제거
+                    if (plcyNo != null && seen.add(plcyNo)) {
 
+                        // 지역 처리
                         Set<String> regionSet = new HashSet<>();
                         String zipCodes = item.path("zipCd").asText(null);
                         if (zipCodes != null && !zipCodes.isBlank()) {
@@ -565,6 +577,14 @@ public class YouthPolicyService {
                                 }
                             }
                         }
+
+                        // 지역 태그 필터링
+                        if (regions != null && !regions.isEmpty()) {
+                            boolean matched = regionSet.stream()
+                                    .anyMatch(region -> regions.stream().anyMatch(region::contains));
+                            if (!matched) continue;
+                        }
+
 
                         // 좋아요 수
                         Long likeCount = policyLikeRepository.countByPlcyNo(plcyNo);
@@ -620,6 +640,7 @@ public class YouthPolicyService {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
     }
+
 
     /**
      * 지역명에서 시/도 단위만 추출
