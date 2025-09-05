@@ -45,6 +45,8 @@ public class SecurityConfig {
                                 "/ping",
                                 "/user/signup",
                                 "/user/doLogin",
+                                "/user/nameCheck",
+                                "/user/emailCheck",
                                 "/youth/policies/**",
                                 "/posts/**"
                         ).permitAll()

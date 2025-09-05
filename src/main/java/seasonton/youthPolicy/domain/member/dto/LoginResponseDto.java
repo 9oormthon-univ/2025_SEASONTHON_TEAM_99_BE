@@ -1,17 +1,20 @@
 package seasonton.youthPolicy.domain.member.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
+import seasonton.youthPolicy.global.dto.TokenDTO;
 
 @Getter
 @Setter
 @AllArgsConstructor
-public class MemberCreateDto {
+@Builder
+public class LoginResponseDto {
     String email;
-    String password;
     String nickname;
     Long regionId;
-    MultipartFile profile;
+    String regionName;
+    String profileImageUrl;
+    TokenDTO token;
 }
