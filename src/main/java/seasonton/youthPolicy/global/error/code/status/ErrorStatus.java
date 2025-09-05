@@ -40,7 +40,12 @@ public enum ErrorStatus {
     POLICY_NOT_FOUND(HttpStatus.NOT_FOUND, "POLICY_4001", "존재하지 않는 정책입니다."),
     POLICY_FORBIDDEN(HttpStatus.FORBIDDEN, "POLICY_4002", "해당 정책에 대한 권한이 없습니다."),
     POLICY_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "POLICY_4003", "잘못된 정책 요청입니다."),
-    POLICY_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "POLICY_4004", "정책 API 호출 중 오류가 발생했습니다.");
+    POLICY_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "POLICY_4004", "정책 API 호출 중 오류가 발생했습니다."),
+
+    // report
+    REPORT_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "REPORT_4001", "이미 해당 년/월/지역구 에 레포트가 존재합니다."),
+    REPORT_CREATE_NOAUTH(HttpStatus.UNAUTHORIZED, "REPORT_4002", "운영자만 레포트를 생성할 수 있습니다."),
+    REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_4003", "존재하지 않는 레포트입니다");
 
     private final HttpStatus httpStatus;
     private final String code;

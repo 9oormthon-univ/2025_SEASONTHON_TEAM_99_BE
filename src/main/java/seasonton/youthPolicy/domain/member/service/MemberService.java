@@ -11,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import seasonton.youthPolicy.domain.member.domain.entity.User;
 import seasonton.youthPolicy.domain.member.domain.repository.UserRepository;
+import seasonton.youthPolicy.domain.member.dto.CheckDto;
 import seasonton.youthPolicy.domain.member.dto.MemberCreateDto;
 import seasonton.youthPolicy.domain.member.dto.MemberLoginDto;
+import seasonton.youthPolicy.domain.model.entity.Region;
+import seasonton.youthPolicy.domain.model.repository.RegionRepository;
 import seasonton.youthPolicy.global.auth.JwtTokenProvider;
 import seasonton.youthPolicy.global.dto.S3DTO;
 import seasonton.youthPolicy.global.dto.TokenDTO;
@@ -25,6 +28,7 @@ import java.util.Optional;
 @Transactional
 public class MemberService {
     private final UserRepository userRepository;
+    private final RegionRepository regionRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -38,11 +42,13 @@ public class MemberService {
             throw new RuntimeException("User already registered!");
         }
 
+        Region region = regionRepository.getReferenceById(memberCreateDto.getRegionId());
+
         User.UserBuilder builder = User.builder()
                 .email(memberCreateDto.getEmail())
                 .password(passwordEncoder.encode(memberCreateDto.getPassword()))
                 .nickname(memberCreateDto.getNickname())
-                .region(null); // 나중에 회원가입시 지역구 설정 시 바꿔야하는 부분
+                .region(region);
 
         MultipartFile profile = memberCreateDto.getProfile();
 
@@ -74,5 +80,24 @@ public class MemberService {
         return user;
     }
 
+    public String emailCheck(CheckDto checkDto) {
+        Optional<User> optMember = userRepository.findByEmail(checkDto.getCheck());
+        if (optMember.isPresent()) {
+            return "this email is using";
+        }
+        else {
+            return "you can use this email";
+        }
+    }
+
+    public String nameCheck(CheckDto checkDto) {
+        Optional<User> optMember = userRepository.findByNickname(checkDto.getCheck());
+        if (optMember.isPresent()) {
+            return "this nickname is using";
+        }
+        else {
+            return "you can use this nickname";
+        }
+    }
 
 }
