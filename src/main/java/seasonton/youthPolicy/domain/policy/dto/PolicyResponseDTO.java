@@ -29,6 +29,8 @@ public class PolicyResponseDTO {
         private PolicyStatus status;       // 진행 상태
         private String startDate;          // 시작일
         private String endDate;            // 종료일
+        private String bizPrdBgngYmd;
+        private String bizPrdEndYmd;
     }
 
     // 좋아요 순 조회
@@ -46,6 +48,8 @@ public class PolicyResponseDTO {
         private PolicyStatus status;       // 진행 상태
         private String startDate;          // 시작일
         private String endDate;            // 종료일
+        private String bizPrdBgngYmd;
+        private String bizPrdEndYmd;
     }
 
 
@@ -105,6 +109,8 @@ public class PolicyResponseDTO {
         private String aplyYmd;
         private String startDate;
         private String endDate;
+        private String bizPrdBgngYmd;
+        private String bizPrdEndYmd;
     }
 
 
@@ -161,6 +167,8 @@ public class PolicyResponseDTO {
         private PolicyStatus status;       // 정책 진행 상태 (예정/진행중/종료/상시)
         private String startDate;          // 시작일
         private String endDate;            // 종료일
+        private String bizPrdBgngYmd;
+        private String bizPrdEndYmd;
     }
 
     // 총 불러온 정책 수 카운트
