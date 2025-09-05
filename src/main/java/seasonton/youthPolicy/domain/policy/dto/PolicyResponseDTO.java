@@ -138,6 +138,7 @@ public class PolicyResponseDTO {
         private String plcyNo;
         private String plcyNm;
         private String writer;  // 유저 닉네임 or ID
+        private Long likeCount;
     }
 
     // 정책 댓글 수정

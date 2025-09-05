@@ -23,6 +23,7 @@ import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
 import seasonton.youthPolicy.domain.policy.dto.PolicyResponseDTO;
 import seasonton.youthPolicy.domain.policy.exception.PolicyException;
 
+import seasonton.youthPolicy.domain.post.converter.PostConverter;
 import seasonton.youthPolicy.domain.report.dto.perplexityDTO;
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
@@ -452,14 +453,18 @@ public class YouthPolicyService {
     // 댓글 조회
     public List<PolicyResponseDTO.ReplyListResponse> getReplies(String plcyNo) {
         return policyReplyRepository.findByPlcyNo(plcyNo).stream()
-                .map(reply -> PolicyResponseDTO.ReplyListResponse.builder()
+                .map(reply -> {
+                        Long likeCnt = policyReplyLikeRepository.countByPolicyReplyId(reply.getId());
+                        return PolicyResponseDTO.ReplyListResponse.builder()
                         .id(reply.getId())
                         .content(reply.getContent())
                         .isAnonymous(reply.isAnonymous())
                         .plcyNo(reply.getPlcyNo())
                         .plcyNm(reply.getPlcyNm())
                         .writer(reply.isAnonymous() ? "익명" : reply.getUser().getNickname())
-                        .build())
+                        .likeCount(likeCnt)
+                        .build();
+                })
                 .collect(Collectors.toList());
     }
 
