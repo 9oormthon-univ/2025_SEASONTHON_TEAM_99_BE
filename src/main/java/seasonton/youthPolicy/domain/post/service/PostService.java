@@ -55,6 +55,7 @@ public class PostService {
                 .title(title)
                 .content(content)
                 .isAnonymous(isAnonymous)
+                .writer(isAnonymous ? "익명" : user.getNickname())
                 .region(region)
                 .user(user)
                 .build();
@@ -100,7 +101,7 @@ public class PostService {
 
     // 댓글 작성
     @Transactional
-    public PostResponseDTO.ReplyCreateResponse createReply(PostRequestDTO.ReplyCreateRequest request, Long userId, Long postId) {
+    public PostResponseDTO.ReplyCreateResponse createReply(PostRequestDTO.ReplyCreateRequest request, Long userId, Long postId, boolean isAnonymous) {
 
         // 유저 정보 조회 및 검증
         User user = userRepository.findById(userId)
@@ -112,7 +113,8 @@ public class PostService {
 
         Reply reply = Reply.builder()
                 .content(request.getContent())
-                .isAnonymous(request.isAnonymous())
+                .isAnonymous(isAnonymous)
+                .writer(isAnonymous ? "익명" : user.getNickname())
                 .user(user)
                 .post(post)
                 .build();
@@ -151,7 +153,7 @@ public class PostService {
                 .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND))
                 : post.getRegion();
 
-        post.updatePost(title, content, isAnonymous, region);
+        post.updatePost(title, content, isAnonymous, isAnonymous ? "익명" : user.getNickname(), region);
 
         // 이미지 교체 로직
         if (newImages != null) {
@@ -201,7 +203,7 @@ public class PostService {
 
     // 댓글 수정
     @Transactional
-    public PostResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PostRequestDTO.ReplyUpdateRequest request) {
+    public PostResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PostRequestDTO.ReplyUpdateRequest request, boolean isAnonymous) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
@@ -214,11 +216,12 @@ public class PostService {
         }
 
         // 수정
-        reply.updateReply(request.getContent(), request.isAnonymous());
+        reply.updateReply(request.getContent(), isAnonymous, isAnonymous ? "익명" : user.getNickname());
 
         return PostConverter.toReplyUpdateResponse(reply);
     }
 
+    // 댓글 삭제
     @Transactional
     public void deleteReply(Long replyId, Long userId) {
         // 유저 검증

@@ -411,35 +411,36 @@ public class YouthPolicyService {
 
     // 댓글 작성
     @Transactional
-    public PolicyResponseDTO.Reply createReply(Long userId, PolicyRequestDTO.Create request) {
+    public PolicyResponseDTO.ReplyCreateResponse createReply(Long userId, PolicyRequestDTO.Create request, boolean isAnonymous) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
 
         PolicyReply reply = PolicyReply.builder()
                 .content(request.getContent())
-                .isAnonymous(request.isAnonymous())
+                .isAnonymous(isAnonymous)
                 .plcyNo(request.getPlcyNo())
                 .plcyNm(request.getPlcyNm())
+                .writer(isAnonymous ? "익명" : user.getNickname())
                 .user(user)
                 .build();
 
         policyReplyRepository.save(reply);
 
-        return PolicyResponseDTO.Reply.builder()
+        return PolicyResponseDTO.ReplyCreateResponse.builder()
                 .id(reply.getId())
                 .content(reply.getContent())
                 .isAnonymous(reply.isAnonymous())
                 .plcyNo(reply.getPlcyNo())
                 .plcyNm(reply.getPlcyNm())
-                .writer(reply.isAnonymous() ? "익명" : user.getNickname())
+                .writer(reply.getWriter())
                 .build();
     }
 
     // 댓글 조회
-    public List<PolicyResponseDTO.Reply> getReplies(String plcyNo) {
+    public List<PolicyResponseDTO.ReplyListResponse> getReplies(String plcyNo) {
         return policyReplyRepository.findByPlcyNo(plcyNo).stream()
-                .map(reply -> PolicyResponseDTO.Reply.builder()
+                .map(reply -> PolicyResponseDTO.ReplyListResponse.builder()
                         .id(reply.getId())
                         .content(reply.getContent())
                         .isAnonymous(reply.isAnonymous())
@@ -452,7 +453,7 @@ public class YouthPolicyService {
 
     // 댓글 수정
     @Transactional
-    public PolicyResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PolicyRequestDTO.ReplyUpdateRequest request) {
+    public PolicyResponseDTO.ReplyUpdateResponse updateReply(Long replyId, Long userId, PolicyRequestDTO.ReplyUpdateRequest request, boolean isAnonymous) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
 
@@ -464,7 +465,7 @@ public class YouthPolicyService {
         }
 
         // 엔티티에 업데이트용 메서드 추가해서 상태 변경
-        reply.updateReply(request.getContent(), request.isAnonymous());
+        reply.updateReply(request.getContent(), isAnonymous, isAnonymous ? "익명" : user.getNickname());
 
         return PolicyResponseDTO.ReplyUpdateResponse.builder()
                 .id(reply.getId())
@@ -472,7 +473,7 @@ public class YouthPolicyService {
                 .isAnonymous(reply.isAnonymous())
                 .plcyNo(reply.getPlcyNo())
                 .plcyNm(reply.getPlcyNm())
-                .writer(reply.isAnonymous() ? "익명" : user.getNickname())
+                .writer(reply.getWriter())
                 .build();
     }
 

@@ -22,6 +22,9 @@ public class Posts extends BaseEntity {
     @Column(length = 2000)
     private String content;
 
+    @Column(length = 50)
+    private String writer;
+
     @Column(nullable = false)
     private boolean isAnonymous;
 
@@ -34,10 +37,11 @@ public class Posts extends BaseEntity {
     private User user;
 
     // 글 수정 관련
-    public void updatePost(String title, String content, boolean isAnonymous, Region region) {
+    public void updatePost(String title, String content, boolean isAnonymous, String writer, Region region) {
         this.title = title;
         this.content = content;
         this.isAnonymous = isAnonymous;
+        this.writer = writer;
         this.region = region;
     }
 }
