@@ -184,7 +184,10 @@ public class PostService {
     public List<PostResponseDTO.PostListResponse> getPosts() {
         return postRepository.findAllWithRegionOrderByCreatedAtDesc()
                 .stream()
-                .map(PostConverter::toPostListResponse) // 여기서 컨버터 사용
+                .map(post -> {
+                    Long likeCnt = postLikeRepository.countByPostId(post.getId());
+                    return PostConverter.toPostListResponse(post, likeCnt);
+                }) // 여기서 컨버터 사용
                 .toList();
 
     }
@@ -259,7 +262,10 @@ public class PostService {
         List<Reply> replies = replyRepository.findAllByPostIdWithUser(postId);
 
         return replies.stream()
-                .map(PostConverter::toReplyListResponse)
+                .map(reply -> {
+                    Long likeCnt = replyLikeRepository.countByReplyId(reply.getId());
+                    return PostConverter.toReplyListResponse(reply, likeCnt);
+                }) // 여기서 컨버터 사용
                 .toList();
     }
 

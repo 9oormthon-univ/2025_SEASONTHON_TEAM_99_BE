@@ -37,6 +37,7 @@ public class PostResponseDTO {
         private String title;
         private String regionName;
         private LocalDateTime createdAt;
+        private Long likeCount;
     }
 
     // 게시글 좋아요 순 조회
@@ -115,6 +116,7 @@ public class PostResponseDTO {
         private Long replyId;
         private String content;
         private LocalDateTime createdAt;
+        private Long likeCount;
     }
 
     // 댓글 수정
