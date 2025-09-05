@@ -150,6 +150,17 @@ public class PostController {
         return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, response);
     }
 
+    // 게시글 좋아요 순 조회
+    @GetMapping("/like-ranking")
+    @Operation(summary = "게시글 좋아요 순 조회", description = "좋아요 개수가 많은 순으로 게시글을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "POST_200", description = "좋아요 순 조회 성공")
+    })
+    public BaseResponse<List<PostResponseDTO.PostLikeListResponse>> getPostsOrderByLikeCount() {
+        List<PostResponseDTO.PostLikeListResponse> data = postService.getPostsOrderByLikeCount();
+        return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, data);
+    }
+
     // 지역 기반 글 목록 조회
     @GetMapping("/region/{region-id}")
     @Operation(summary = "지역별 게시글 조회", description = "특정 지역에 속한 게시글 목록을 조회합니다.")
@@ -224,9 +235,9 @@ public class PostController {
     }
 
     // 댓글 작성
-    @PostMapping("/{post-id}/replies")
+    @PostMapping("/replies/{post-id}")
     @Operation(
-            summary = "댓글 작성",
+            summary = "게시글 댓글 작성",
             description = "postId를 path에 포함하시고, 댓글에 넣을 정보를 request body에 담아서 넘겨주세요"
     )
     @ApiResponses(value = {
@@ -245,9 +256,9 @@ public class PostController {
     }
 
     // 댓글 조회
-    @GetMapping("/{post-id}/replies")
+    @GetMapping("/replies/{post-id}")
     @Operation(
-            summary = "댓글 목록 조회",
+            summary = "게시글 댓글 목록 조회",
             description = "특정 게시글(postId)에 달린 모든 댓글을 작성된 순서대로(createdAt ASC) 조회합니다."
     )
     @ApiResponses(value = {
@@ -262,8 +273,8 @@ public class PostController {
     }
 
     // 댓글 수정
-    @PatchMapping("/{reply-id}/replies")
-    @Operation(summary = "댓글 수정", description = "특정 댓글 내용을 수정합니다. (작성자 본인만 수정 가능)")
+    @PatchMapping("/replies/{reply-id}")
+    @Operation(summary = "게시글 댓글 수정", description = "특정 댓글 내용을 수정합니다. (작성자 본인만 수정 가능)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "REPLY_200", description = "댓글 수정 성공"),
             @ApiResponse(responseCode = "REPLY_4001", description = "존재하지 않는 댓글"),
@@ -312,9 +323,23 @@ public class PostController {
         return BaseResponse.onSuccess(SuccessStatus.POST_LIKE_TOGGLE_SUCCESS, message);
     }
 
-    // 댓글 좋아요
-    @PostMapping("/{reply-id}/like/replies")
-    @Operation(summary = "댓글 좋아요 토글", description = "특정 댓글에 대해 좋아요를 추가하거나 취소합니다.")
+    // 게시글 좋아요 개수 조회
+    @GetMapping("/{post-id}/like-count")
+    @Operation(summary = "게시글 좋아요 개수 조회", description = "특정 게시글에 대한 좋아요 개수를 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "LIKE_200", description = "좋아요 개수 조회 성공"),
+            @ApiResponse(responseCode = "POST_4001", description = "존재하지 않는 게시글")
+    })
+    public BaseResponse<Long> getPostLikeCount(
+            @PathVariable("post-id") Long postId
+    ) {
+        Long count = postService.getPostLikeCount(postId);
+        return BaseResponse.onSuccess(SuccessStatus.POST_LIKE_COUNT_SUCCESS, count);
+    }
+
+    // 게시글 댓글 좋아요
+    @PostMapping("/replies/{reply-id}/like")
+    @Operation(summary = "게시글 댓글 좋아요 토글", description = "특정 댓글에 대해 좋아요를 추가하거나 취소합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "LIKE_200", description = "좋아요 토글 성공"),
             @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
@@ -327,4 +352,19 @@ public class PostController {
         String message = postService.toggleReplyLike(userPrincipal.getId(), replyId);
         return BaseResponse.onSuccess(SuccessStatus.REPLY_LIKE_TOGGLE_SUCCESS, message);
     }
+
+    // 게시글 댓글 좋아요 개수 조회
+    @GetMapping("/replies/{reply-id}/like-count")
+    @Operation(summary = "게시글 댓글 좋아요 개수 조회", description = "특정 댓글에 대한 좋아요 개수를 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "LIKE_200", description = "좋아요 개수 조회 성공"),
+            @ApiResponse(responseCode = "REPLY_4001", description = "존재하지 않는 댓글")
+    })
+    public BaseResponse<Long> getReplyLikeCount(
+            @PathVariable("reply-id") Long replyId
+    ) {
+        Long count = postService.getReplyLikeCount(replyId);
+        return BaseResponse.onSuccess(SuccessStatus.REPLY_LIKE_COUNT_SUCCESS, count);
+    }
+
 }

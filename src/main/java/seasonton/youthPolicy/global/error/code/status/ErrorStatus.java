@@ -42,6 +42,7 @@ public enum ErrorStatus {
     POLICY_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "POLICY_4003", "잘못된 정책 요청입니다."),
     POLICY_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "POLICY_4004", "정책 API 호출 중 오류가 발생했습니다."),
     REPLY_FILTERED(HttpStatus.BAD_REQUEST, "REPLY_4001", "이상 댓글(욕설/스팸 등)로 차단되었습니다."),
+    POLICY_REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "REPLY_4001", "존재하지 않는 정책 댓글입니다."),
 
 
     // report

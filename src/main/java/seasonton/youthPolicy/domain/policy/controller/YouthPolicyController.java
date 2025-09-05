@@ -213,9 +213,33 @@ public class YouthPolicyController {
         );
     }
 
+    // 정책 댓글 좋아요
+    @PostMapping("/policies/replies/{reply-id}/like")
+    @Operation(summary = "정책 댓글 좋아요 토글", description = "이미 좋아요를 눌렀으면 취소, 안눌렀으면 추가")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "LIKE_200", description = "좋아요 토글 성공"),
+            @ApiResponse(responseCode = "REPLY_4001", description = "댓글을 찾을 수 없음"),
+    })
+    public BaseResponse<String> policyReplyLikeToggleLike(@PathVariable("reply-id") Long replyId,
+                                           @AuthenticationPrincipal UserPrincipal principal) {
+
+        youthPolicyService.policyReplyToggleLike(principal.getId(), replyId);
+        return BaseResponse.onSuccess(SuccessStatus.POLICY_REPLY_LIKE_SUCCESS, "좋아요 토글 완료");
+    }
+
+    // 정책 댓글 좋아요 개수 조회
+    @GetMapping("/policies/replies/{reply-id}/likes")
+    @Operation(summary = "정책 댓글 좋아요 개수 조회", description = "해당 댓글의 좋아요 수를 가져옵니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "REPLY_200", description = "정책 댓글 좋아요 카운트 성공"),
+    })
+    public BaseResponse<Long> getPolicyReplyLikeCount(@PathVariable("reply-id") Long replyId) {
+        return BaseResponse.onSuccess(SuccessStatus.POLICY_REPLY_LIKE_COUNT_SUCCESS,
+                youthPolicyService.getPolicyReplyLikeCount(replyId));
+    }
 
     // 정책 좋아요 토글 (추가/취소)
-    @PostMapping("/{plcy-no}/like")
+    @PostMapping("/policies/{plcy-no}/like")
     @Operation(summary = "정책 좋아요 토글", description = "특정 정책에 대해 좋아요를 추가하거나 취소합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "LIKE_200", description = "좋아요 토글 성공"),
@@ -230,7 +254,7 @@ public class YouthPolicyController {
     }
 
     // 정책 좋아요 갯수 조회
-    @GetMapping("/{plcy-no}/likes")
+    @GetMapping("/policies/{plcy-no}/likes")
     @Operation(summary = "정책 좋아요 수 조회", description = "특정 정책의 좋아요 개수를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "LIKE_200", description = "해당 정책의 좋아요 갯수 조회 완료")

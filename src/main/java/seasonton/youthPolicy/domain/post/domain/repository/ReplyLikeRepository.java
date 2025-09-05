@@ -13,4 +13,5 @@ public interface ReplyLikeRepository extends JpaRepository<ReplyLike, Long> {
 
      Optional<ReplyLike> findByUserAndReply(User user, Reply reply);
 
+     Long countByReplyId(Long replyId);
 }

@@ -25,7 +25,8 @@ public enum SuccessStatus {
     VOTE_UPDATE_SUCCESS(HttpStatus.OK, "VOTE_200", "투표 수정 성공"),
     VOTE_READ_SUCCESS(HttpStatus.OK, "VOTE_200", "투표 조회 성공"),
     VOTE_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "VOTE_204", "투표 삭제 성공"),
-
+    REPLY_LIKE_COUNT_SUCCESS(HttpStatus.OK, "LIKE_200", "게시글 댓글 좋아요 개수 카운트"),
+    POST_LIKE_COUNT_SUCCESS(HttpStatus.OK, "LIKE_200", "게시글 좋아요 개수 조회 완료"),
     // policy
     POLICY_READ_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 조회 성공"),
     POLICY_STATUS_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 상태 조회 성공"),
@@ -39,6 +40,8 @@ public enum SuccessStatus {
     POLICY_REPLY_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "REPLY_204", "정책 댓글 삭제 성공"),
     POLICY_REPLY_SUMMARY_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 요약 성공"),
     POLICY_REPLY_FILTER_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 필터링 성공"),
+    POLICY_REPLY_LIKE_SUCCESS(HttpStatus.OK, "REPLY_200", "정책 댓글 좋아요 완료"),
+    POLICY_REPLY_LIKE_COUNT_SUCCESS(HttpStatus.OK, "REPLY_200", "정책 댓글 개수 카운트 완료"),
 
     // test
     SUCCESS_TEST(HttpStatus.OK, "TEST_200", "테스트 완료");

@@ -34,5 +34,10 @@ public interface PostRepository extends JpaRepository<Posts, Long> {
     );
 
     List<Posts> findByRegion(Region region);
-           
+
+    // 게시글 좋아요 개수 기준 정렬
+    @Query("SELECT p FROM Posts p LEFT JOIN p.postLikes pl " +
+            "GROUP BY p " +
+            "ORDER BY COUNT(pl) DESC")
+    List<Posts> findAllOrderByLikeCountDesc();
 }
