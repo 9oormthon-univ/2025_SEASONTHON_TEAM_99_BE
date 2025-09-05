@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,12 +16,15 @@ import org.springframework.web.multipart.MultipartFile;
 import seasonton.youthPolicy.domain.post.domain.entity.Posts;
 import seasonton.youthPolicy.domain.post.dto.PostRequestDTO;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
+import seasonton.youthPolicy.domain.post.dto.VoteRequestDTO;
+import seasonton.youthPolicy.domain.post.dto.VoteResponseDTO;
 import seasonton.youthPolicy.domain.post.service.PostService;
 import seasonton.youthPolicy.global.auth.UserPrincipal;
 import seasonton.youthPolicy.global.common.response.BaseResponse;
 import seasonton.youthPolicy.global.error.code.status.SuccessStatus;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Validated
@@ -47,13 +51,89 @@ public class PostController {
             @RequestParam Long regionId,
             @RequestParam boolean isAnonymous,
             @RequestPart(value = "imageFile", required = false) List<MultipartFile> imageFile,
+            @RequestParam(required = false) String question,
+            @RequestParam(required = false) List<String> options,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate,
+            @RequestParam(required = false, defaultValue = "false") boolean multipleChoice,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         PostResponseDTO.PostCreateResponse response = postService.createPost(
-                userPrincipal.getId(), title, content, regionId, isAnonymous, imageFile);
+                userPrincipal.getId(), title, content, regionId, isAnonymous,
+                imageFile, question, options, endDate, multipleChoice);
 
         return BaseResponse.onSuccess(SuccessStatus.POST_CREATE_SUCCESS, response);
     }
+
+    // 투표 수정
+    @PatchMapping("/{postId}/vote")
+    @Operation(
+            summary = "투표 수정",
+            description = "특정 게시글에 연결된 투표를 수정합니다. 작성자만 수정할 수 있습니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "VOTE_200", description = "투표 수정 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
+            @ApiResponse(responseCode = "POST_4004", description = "존재하지 않는 게시글"),
+            @ApiResponse(responseCode = "VOTE_4004", description = "존재하지 않는 투표"),
+            @ApiResponse(responseCode = "POST_403", description = "게시글 작성자가 아님")
+    })
+    public BaseResponse<PostResponseDTO.PostUpdateResponse> updateVote(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam String question,
+            @RequestParam List<String> options,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate,
+            @RequestParam boolean multipleChoice
+    ) {
+        PostResponseDTO.PostUpdateResponse response = postService.updateVote(
+                postId,
+                userPrincipal.getId(),
+                question,
+                options,
+                endDate,
+                multipleChoice
+        );
+
+        return BaseResponse.onSuccess(SuccessStatus.VOTE_UPDATE_SUCCESS, response);
+    }
+
+    // 투표 조회
+    @GetMapping("/{postId}/vote")
+    @Operation(
+            summary = "투표 조회",
+            description = "특정 게시글에 연결된 투표 정보를 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "VOTE_200", description = "투표 조회 성공"),
+            @ApiResponse(responseCode = "POST_4004", description = "존재하지 않는 게시글"),
+            @ApiResponse(responseCode = "VOTE_4004", description = "존재하지 않는 투표")
+    })
+    public BaseResponse<VoteResponseDTO.PostVoteResponse> getVote(@PathVariable Long postId) {
+        VoteResponseDTO.PostVoteResponse response = postService.getVote(postId);
+        return BaseResponse.onSuccess(SuccessStatus.VOTE_READ_SUCCESS, response);
+    }
+
+    // 투표 삭제
+    @DeleteMapping("/{postId}/vote")
+    @Operation(
+            summary = "투표 삭제",
+            description = "특정 게시글에 연결된 투표를 삭제합니다. 작성자만 삭제할 수 있습니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "VOTE_204", description = "투표 삭제 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
+            @ApiResponse(responseCode = "POST_4004", description = "존재하지 않는 게시글"),
+            @ApiResponse(responseCode = "VOTE_4004", description = "존재하지 않는 투표"),
+            @ApiResponse(responseCode = "POST_403", description = "게시글 작성자가 아님")
+    })
+    public BaseResponse<Void> deleteVote(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        postService.deleteVote(postId, userPrincipal.getId());
+        return BaseResponse.onSuccess(SuccessStatus.VOTE_DELETE_SUCCESS, null);
+    }
+
 
     // 글 목록 조회
     @GetMapping("/list")
