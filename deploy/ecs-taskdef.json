@@ -25,7 +25,8 @@
         { "name": "JWT_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:JWT_SECRET_KEY::" },
         { "name": "MINIO_ACCESS_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:MINIO_ACCESS_KEY::" },
         { "name": "MINIO_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:MINIO_SECRET_KEY::" },
-        { "name": "YOUTH_POLICY_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:YOUTH_POLICY_KEY::" }
+        { "name": "YOUTH_POLICY_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:YOUTH_POLICY_KEY::" },
+        { "name": "PERPLEXITY_API_KEY", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:PERPLEXITY_API_KEY::" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",

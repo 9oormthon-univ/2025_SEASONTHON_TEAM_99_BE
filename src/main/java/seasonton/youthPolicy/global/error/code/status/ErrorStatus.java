@@ -41,6 +41,8 @@ public enum ErrorStatus {
     POLICY_FORBIDDEN(HttpStatus.FORBIDDEN, "POLICY_4002", "해당 정책에 대한 권한이 없습니다."),
     POLICY_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "POLICY_4003", "잘못된 정책 요청입니다."),
     POLICY_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "POLICY_4004", "정책 API 호출 중 오류가 발생했습니다."),
+    REPLY_FILTERED(HttpStatus.BAD_REQUEST, "REPLY_4001", "이상 댓글(욕설/스팸 등)로 차단되었습니다."),
+
 
     // report
     REPORT_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "REPORT_4001", "이미 해당 년/월/지역구 에 레포트가 존재합니다."),

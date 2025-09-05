@@ -37,6 +37,8 @@ public enum SuccessStatus {
     POLICY_LIKE_COUNT_SUCCESS(HttpStatus.OK, "LIKE_200", "해당 정책의 좋아요 갯수 조회 완료"),
     POLICY_REPLY_UPDATE_SUCCESS(HttpStatus.OK, "REPLY_200", "정책 댓글 수정 성공"),
     POLICY_REPLY_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "REPLY_204", "정책 댓글 삭제 성공"),
+    POLICY_REPLY_SUMMARY_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 요약 성공"),
+    POLICY_REPLY_FILTER_SUCCESS(HttpStatus.OK, "REPLY_200", "댓글 필터링 성공"),
 
     // test
     SUCCESS_TEST(HttpStatus.OK, "TEST_200", "테스트 완료");

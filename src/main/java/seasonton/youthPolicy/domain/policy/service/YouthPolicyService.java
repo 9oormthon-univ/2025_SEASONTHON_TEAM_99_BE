@@ -21,11 +21,11 @@ import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
 import seasonton.youthPolicy.domain.policy.dto.PolicyResponseDTO;
 import seasonton.youthPolicy.domain.policy.exception.PolicyException;
 
+import seasonton.youthPolicy.domain.report.dto.perplexityDTO;
 import seasonton.youthPolicy.global.common.RegionCodeMapper;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
+import seasonton.youthPolicy.global.infra.PerplexityClient;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +43,7 @@ public class YouthPolicyService {
     private final UserRepository userRepository;
     private final PolicyReplyRepository policyReplyRepository;
     private final PolicyLikeRepository policyLikeRepository;
+    private final PerplexityClient perplexityClient;
 
     @Value("${youth.api.url}")
     private String baseUrl;
@@ -418,6 +419,11 @@ public class YouthPolicyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
 
+        PolicyResponseDTO.ReplyFilterResponse filterResult = filterComment(request.getContent());
+        if (!filterResult.isAllowed()) {
+            throw new PolicyException(ErrorStatus.REPLY_FILTERED);
+        }
+
         PolicyReply reply = PolicyReply.builder()
                 .content(request.getContent())
                 .isAnonymous(isAnonymous)
@@ -496,6 +502,54 @@ public class YouthPolicyService {
                 .message("댓글이 성공적으로 삭제되었습니다.")
                 .build();
     }
+
+    // 댓글 요약
+    @Transactional(readOnly = true)
+    public PolicyResponseDTO.ReplySummaryResponse summarizeReplies(String plcyNo, String plcyNm) {
+        List<PolicyReply> replies = policyReplyRepository.findByPlcyNo(plcyNo);
+
+        if (replies.isEmpty()) {
+            return PolicyResponseDTO.ReplySummaryResponse.builder()
+                    .plcyNo(plcyNo)
+                    .summary("댓글이 아직 존재하지 않습니다.")
+                    .build();
+        }
+
+        String combined = replies.stream()
+                .map(PolicyReply::getContent)
+                .collect(Collectors.joining("\n"));
+
+        perplexityDTO.PerplexityChatResponse resp = perplexityClient.summarize(
+                "다음은 정책 '" + plcyNm + "'에 대한 댓글들입니다. 핵심 의견을 요약해줘:\n" + combined
+        );
+
+        String summary = resp.getChoices()[0].getMessage().getContent();
+
+        return PolicyResponseDTO.ReplySummaryResponse.builder()
+                .plcyNo(plcyNo)
+                .summary(summary)
+                .build();
+    }
+
+    // 댓글 자동 필터링 -> 2차로 검사
+    @Transactional
+    public List<Long> autoDeleteAbnormalReplies(String plcyNo) {
+        List<PolicyReply> replies = policyReplyRepository.findByPlcyNo(plcyNo);
+
+        List<Long> deletedIds = new ArrayList<>();
+
+        for (PolicyReply reply : replies) {
+            PolicyResponseDTO.ReplyFilterResponse filter = filterComment(reply.getContent());
+
+            if (!filter.isAllowed()) {
+                policyReplyRepository.delete(reply);
+                deletedIds.add(reply.getId());
+            }
+        }
+
+        return deletedIds;
+    }
+
 
     // 정책 좋아요 토글 (추가/취소)
     @Transactional
@@ -690,5 +744,25 @@ public class YouthPolicyService {
         if (today.isBefore(start)) return PolicyStatus.NOT_STARTED;
         else if (!today.isAfter(end)) return PolicyStatus.IN_PROGRESS;
         else return PolicyStatus.COMPLETED;
+    }
+
+    // 댓글 필터링
+    private PolicyResponseDTO.ReplyFilterResponse filterComment(String content) {
+        String prompt = "다음 댓글이 욕설/비방/스팸/도배라면 'BLOCK: 이유'로, 정상적이면 'OK'라고만 답해:\n" + content;
+
+        perplexityDTO.PerplexityChatResponse resp = perplexityClient.summarize(prompt);
+        String answer = resp.getChoices()[0].getMessage().getContent().trim();
+
+        if (answer.startsWith("OK")) {
+            return PolicyResponseDTO.ReplyFilterResponse.builder()
+                    .allowed(true)
+                    .reason("정상 댓글")
+                    .build();
+        } else {
+            return PolicyResponseDTO.ReplyFilterResponse.builder()
+                    .allowed(false)
+                    .reason(answer.replace("BLOCK:", "").trim())
+                    .build();
+        }
     }
 }
