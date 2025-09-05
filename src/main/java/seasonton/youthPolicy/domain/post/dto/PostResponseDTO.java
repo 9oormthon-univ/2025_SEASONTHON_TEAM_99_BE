@@ -39,6 +39,20 @@ public class PostResponseDTO {
         private LocalDateTime createdAt;
     }
 
+    // 게시글 좋아요 순 조회
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PostLikeListResponse {
+        private Long id;
+        private String title;
+        private String content;
+        private Long likeCount;
+        private LocalDateTime createdAt;
+    }
+
+
     // 지역별 게시글 목록 조회
     @Getter
     @Builder

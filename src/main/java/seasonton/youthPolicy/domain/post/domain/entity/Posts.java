@@ -6,6 +6,9 @@ import seasonton.youthPolicy.domain.model.entity.BaseEntity;
 import seasonton.youthPolicy.domain.model.entity.Region;
 import seasonton.youthPolicy.domain.member.domain.entity.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Builder
@@ -35,6 +38,9 @@ public class Posts extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostLike> postLikes = new ArrayList<>();
 
     // 글 수정 관련
     public void updatePost(String title, String content, boolean isAnonymous, String writer, Region region) {

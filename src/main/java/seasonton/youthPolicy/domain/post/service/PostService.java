@@ -189,6 +189,23 @@ public class PostService {
 
     }
 
+    // 게시글 좋아요 순 목록 조회
+    @Transactional(readOnly = true)
+    public List<PostResponseDTO.PostLikeListResponse> getPostsOrderByLikeCount() {
+        List<Posts> posts = postRepository.findAllOrderByLikeCountDesc();
+
+        return posts.stream()
+                .map(post -> PostResponseDTO.PostLikeListResponse.builder()
+                        .id(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .likeCount((long) post.getPostLikes().size()) // 바로 엔티티에서 개수 가져오기
+                        .createdAt(post.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
+
     // 지역 기반 글 목록 조회
     public List<PostResponseDTO.PostRegionListResponse> getPostsByRegion(Long regionId) {
         Region region = regionRepository.findById(regionId)
@@ -402,7 +419,13 @@ public class PostService {
         }
     }
 
-    // 댓글 좋아요
+    // 게시글 좋아요 개수 카운트
+    public Long getPostLikeCount(Long postId) {
+        return postLikeRepository.countByPostId(postId);
+    }
+
+
+    // 게시글 댓글 좋아요
     @Transactional
     public String toggleReplyLike(Long userId, Long replyId) {
         User user = userRepository.findById(userId)
@@ -425,4 +448,10 @@ public class PostService {
             return "댓글 좋아요 추가됨";
         }
     }
+
+    // 게시글 댓글 좋아요 카운트
+    public Long getReplyLikeCount(Long replyId) {
+        return replyLikeRepository.countByReplyId(replyId);
+    }
+
 }

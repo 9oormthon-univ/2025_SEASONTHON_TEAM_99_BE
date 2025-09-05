@@ -11,11 +11,13 @@ import seasonton.youthPolicy.domain.member.domain.entity.User;
 import seasonton.youthPolicy.domain.member.domain.repository.UserRepository;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyLike;
 import seasonton.youthPolicy.domain.policy.domain.entity.PolicyReply;
+import seasonton.youthPolicy.domain.policy.domain.entity.PolicyReplyLike;
 import seasonton.youthPolicy.domain.policy.domain.enums.EarnConditionCode;
 import seasonton.youthPolicy.domain.policy.domain.enums.JobCode;
 import seasonton.youthPolicy.domain.policy.domain.enums.PolicyStatus;
 import seasonton.youthPolicy.domain.policy.domain.enums.SchoolCode;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyLikeRepository;
+import seasonton.youthPolicy.domain.policy.domain.repository.PolicyReplyLikeRepository;
 import seasonton.youthPolicy.domain.policy.domain.repository.PolicyReplyRepository;
 import seasonton.youthPolicy.domain.policy.dto.PolicyRequestDTO;
 import seasonton.youthPolicy.domain.policy.dto.PolicyResponseDTO;
@@ -44,6 +46,8 @@ public class YouthPolicyService {
     private final PolicyReplyRepository policyReplyRepository;
     private final PolicyLikeRepository policyLikeRepository;
     private final PerplexityClient perplexityClient;
+    private final PolicyReplyLikeRepository policyReplyLikeRepository;
+
 
     @Value("${youth.api.url}")
     private String baseUrl;
@@ -503,8 +507,34 @@ public class YouthPolicyService {
                 .build();
     }
 
+    // 정책 댓글 좋아요 추가/취소
+    @Transactional
+    public void policyReplyToggleLike(Long userId, Long replyId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new PolicyException(ErrorStatus.USER_NOT_FIND));
+
+        PolicyReply reply = policyReplyRepository.findById(replyId)
+                .orElseThrow(() -> new PolicyException(ErrorStatus.POLICY_REPLY_NOT_FOUND));
+
+        // 이미 좋아요 한 경우 → 취소
+        policyReplyLikeRepository.findByUserIdAndPolicyReplyId(userId, replyId)
+                .ifPresentOrElse(
+                        policyReplyLikeRepository::delete, () -> {
+                            // 좋아요 추가
+                            PolicyReplyLike newLike = PolicyReplyLike.builder()
+                                    .user(user)
+                                    .policyReply(reply)
+                                    .build();
+                            policyReplyLikeRepository.save(newLike);
+                        }
+                );
+    }
+
+    // 정책 댓글 좋아요 개수 조회
+    public Long getPolicyReplyLikeCount(Long replyId) {
+        return policyReplyLikeRepository.countByPolicyReplyId(replyId);
+    }
     // 댓글 요약
-    @Transactional(readOnly = true)
     public PolicyResponseDTO.ReplySummaryResponse summarizeReplies(String plcyNo, String plcyNm) {
         List<PolicyReply> replies = policyReplyRepository.findByPlcyNo(plcyNo);
 
