@@ -1,7 +1,10 @@
 package seasonton.youthPolicy.domain.post.converter;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import seasonton.youthPolicy.domain.post.domain.entity.Posts;
 import seasonton.youthPolicy.domain.post.domain.entity.Reply;
+import seasonton.youthPolicy.domain.post.domain.repository.PostLikeRepository;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
 import seasonton.youthPolicy.domain.model.entity.Region;
 
@@ -21,12 +24,13 @@ public class PostConverter {
     }
 
     // 글 목록 조회
-    public static PostResponseDTO.PostListResponse toPostListResponse(Posts post) {
+    public static PostResponseDTO.PostListResponse toPostListResponse(Posts post, Long count) {
         return PostResponseDTO.PostListResponse.builder()
                 .postId(post.getId())
                 .title(post.getTitle())
                 .regionName(post.getRegion().getRegionName())
                 .createdAt(post.getCreatedAt())
+                .likeCount(count)
                 .build();
     }
 
@@ -63,11 +67,12 @@ public class PostConverter {
     }
 
     // 댓글 조회
-    public static PostResponseDTO.ReplyListResponse toReplyListResponse(Reply reply) {
+    public static PostResponseDTO.ReplyListResponse toReplyListResponse(Reply reply, Long count) {
         return PostResponseDTO.ReplyListResponse.builder()
                 .replyId(reply.getId())
                 .content(reply.getContent())
                 .createdAt(reply.getCreatedAt())
+                .likeCount(count)
                 .build();
     }
 
