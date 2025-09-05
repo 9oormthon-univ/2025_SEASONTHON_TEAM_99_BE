@@ -17,7 +17,11 @@ public class Reply extends BaseEntity {
 
     private String content = "no contents";
 
+    @Column(nullable = false)
     private boolean isAnonymous;
+
+    @Column(length = 50)
+    private String writer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -28,8 +32,9 @@ public class Reply extends BaseEntity {
     private Posts post;
 
     // 업데이트 관련 메서드
-    public void updateReply(String content, boolean isAnonymous) {
+    public void updateReply(String content, boolean isAnonymous, String writer) {
         this.content = content;
         this.isAnonymous = isAnonymous;
+        this.writer = writer;
     }
 }

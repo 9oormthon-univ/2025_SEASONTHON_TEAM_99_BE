@@ -1,0 +1,88 @@
+name: CI - Build & Push (Gradle)
+
+on:
+  push:
+    branches: main
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    branches: main
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-northeast-2
+      ECR_REPO: cheongjeong-api
+      IMAGE_TAG: ${{ github.sha }}
+      APP_PATH: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build (Gradle, no tests)
+        working-directory: ${{ env.APP_PATH }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test --no-daemon
+          # 실행 가능한 부트 JAR이 build/libs/에 생성됨 (plain.jar 제외)
+
+      - name: Normalize JAR name to app.jar
+        run: |
+          set -e
+          JAR=$(ls "$APP_PATH"/build/libs/*.jar | grep -v 'plain' | head -n 1)
+          if [ -z "$JAR" ]; then
+            echo "ERROR: build/libs/*.jar not found"; exit 1
+          fi
+          cp "$JAR" "$APP_PATH/build/libs/app.jar"
+          echo "Using JAR: $JAR -> $APP_PATH/build/libs/app.jar"
+
+      - name: Configure AWS creds (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t $ECR_REPO:$IMAGE_TAG $APP_PATH
+
+      - name: Tag & Push (SHA + branch-latest)
+        run: |
+          REG="${{ steps.ecr.outputs.registry }}"
+          docker tag $ECR_REPO:$IMAGE_TAG $REG/$ECR_REPO:$IMAGE_TAG
+          docker push $REG/$ECR_REPO:$IMAGE_TAG
+
+          BR="${GITHUB_REF_NAME}"
+          if [ "$BR" = "dev" ] || [ "$BR" = "main" ]; then
+            docker tag $REG/$ECR_REPO:$IMAGE_TAG $REG/$ECR_REPO:${BR}-latest
+            docker push $REG/$ECR_REPO:${BR}-latest
+          fi

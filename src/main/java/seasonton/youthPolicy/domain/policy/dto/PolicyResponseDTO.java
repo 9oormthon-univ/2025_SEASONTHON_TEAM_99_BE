@@ -113,13 +113,25 @@ public class PolicyResponseDTO {
         private String bizPrdEndYmd;
     }
 
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ReplyCreateResponse {
+        private Long id;
+        private String content;
+        private boolean isAnonymous;
+        private String plcyNo;
+        private String plcyNm;
+        private String writer; // 익명 or 작성자 닉네임
+    }
 
     // 정책 댓글 조회
     @Getter
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class Reply {
+    public static class ReplyListResponse {
         private Long id;
         private String content;
         private boolean isAnonymous;

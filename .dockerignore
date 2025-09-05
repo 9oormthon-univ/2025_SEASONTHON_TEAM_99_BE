@@ -1,0 +1,10 @@
+
+.git
+.gradle
+**/.gradle/**
+**/.git/**
+
+build/*
+
+!build/libs/
+!build/libs/*.jar

@@ -121,12 +121,13 @@ public class YouthPolicyController {
             @ApiResponse(responseCode = "REPLY_201", description = "댓글 작성 성공"),
             @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
     })
-    public BaseResponse<PolicyResponseDTO.Reply> PolicyCreateReply(
-            @AuthenticationPrincipal UserPrincipal userPrincipal ,
+    public BaseResponse<PolicyResponseDTO.ReplyCreateResponse> PolicyCreateReply(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam boolean isAnonymous,
             @RequestBody PolicyRequestDTO.Create request) {
         return BaseResponse.onSuccess(
                 SuccessStatus.POLICY_REPLY_CREATE_SUCCESS,
-                youthPolicyService.createReply(userPrincipal.getId(), request)
+                youthPolicyService.createReply(userPrincipal.getId(), request, isAnonymous)
         );
     }
 
@@ -136,7 +137,7 @@ public class YouthPolicyController {
     @ApiResponses({
             @ApiResponse(responseCode = "REPLY_200", description = "댓글 조회 성공")
     })
-    public BaseResponse<List<PolicyResponseDTO.Reply>> getReplies(@RequestParam String plcyNo) {
+    public BaseResponse<List<PolicyResponseDTO.ReplyListResponse>> getReplies(@RequestParam String plcyNo) {
         return BaseResponse.onSuccess(
                 SuccessStatus.POLICY_REPLY_READ_SUCCESS,
                 youthPolicyService.getReplies(plcyNo)
@@ -155,10 +156,11 @@ public class YouthPolicyController {
     public BaseResponse<PolicyResponseDTO.ReplyUpdateResponse> updateReply(
             @PathVariable("reply-id") Long replyId,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam boolean isAnonymous,
             @RequestBody PolicyRequestDTO.ReplyUpdateRequest request) {
         return BaseResponse.onSuccess(
                 SuccessStatus.POLICY_REPLY_UPDATE_SUCCESS,
-                youthPolicyService.updateReply(replyId, userPrincipal.getId(), request)
+                youthPolicyService.updateReply(replyId, userPrincipal.getId(), request, isAnonymous)
         );
     }
 

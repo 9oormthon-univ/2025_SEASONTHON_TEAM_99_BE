@@ -46,7 +46,7 @@ public class PostController {
             @RequestParam String content,
             @RequestParam Long regionId,
             @RequestParam boolean isAnonymous,
-            @RequestPart("imageFile") List<MultipartFile> imageFile,
+            @RequestPart(value = "imageFile", required = false) List<MultipartFile> imageFile,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         PostResponseDTO.PostCreateResponse response = postService.createPost(
@@ -157,9 +157,10 @@ public class PostController {
     public BaseResponse<PostResponseDTO.ReplyCreateResponse> createReply(
             @PathVariable("post-id") Long postId,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam boolean isAnonymous,
             @RequestBody @Valid PostRequestDTO.ReplyCreateRequest request
     ) {
-        PostResponseDTO.ReplyCreateResponse response = postService.createReply(request, userPrincipal.getId(), postId);
+        PostResponseDTO.ReplyCreateResponse response = postService.createReply(request, userPrincipal.getId(), postId, isAnonymous);
         return BaseResponse.onSuccess(SuccessStatus.POST_REPLY_CREATE_SUCCESS, response);
     }
 
@@ -191,9 +192,10 @@ public class PostController {
     public BaseResponse<PostResponseDTO.ReplyUpdateResponse> updateReply(
             @PathVariable("reply-id") Long replyId,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestParam boolean isAnonymous,
             @RequestBody @Valid PostRequestDTO.ReplyUpdateRequest request
     ) {
-        PostResponseDTO.ReplyUpdateResponse response = postService.updateReply(replyId, userPrincipal.getId(), request);
+        PostResponseDTO.ReplyUpdateResponse response = postService.updateReply(replyId, userPrincipal.getId(), request, isAnonymous);
         return BaseResponse.onSuccess(SuccessStatus.REPLY_UPDATE_SUCCESS, response);
     }
 
