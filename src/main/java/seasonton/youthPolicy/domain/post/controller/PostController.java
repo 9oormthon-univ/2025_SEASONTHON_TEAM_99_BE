@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import seasonton.youthPolicy.domain.post.domain.entity.Posts;
 import seasonton.youthPolicy.domain.post.dto.PostRequestDTO;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
 import seasonton.youthPolicy.domain.post.service.PostService;
@@ -68,6 +69,21 @@ public class PostController {
         List<PostResponseDTO.PostListResponse> response = postService.getPosts();
         return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, response);
     }
+
+    // 지역 기반 글 목록 조회
+    @GetMapping("/region/{region-id}")
+    @Operation(summary = "지역별 게시글 조회", description = "특정 지역에 속한 게시글 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "POST_200", description = "지역별 게시글 조회 성공"),
+            @ApiResponse(responseCode = "REGION_4001", description = "존재하지 않는 지역")
+    })
+    public BaseResponse<List<PostResponseDTO.PostRegionListResponse>> getPostsByRegion(
+            @PathVariable("region-id") Long regionId
+    ) {
+        List<PostResponseDTO.PostRegionListResponse> posts = postService.getPostsByRegion(regionId);
+        return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, posts);
+    }
+
 
     // 글 상세 조회
     @GetMapping("/{post-id}")
@@ -198,5 +214,35 @@ public class PostController {
         return BaseResponse.onSuccess(SuccessStatus.REPLY_DELETE_SUCCESS, "댓글이 삭제되었습니다.");
     }
 
-    // 좋아요 순 보기
+    // 게시글 좋아요
+    @PostMapping("/{post-id}/like")
+    @Operation(summary = "게시글 좋아요 토글", description = "특정 게시글에 대해 좋아요를 추가하거나 취소합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "LIKE_200", description = "좋아요 토글 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
+            @ApiResponse(responseCode = "POST_4001", description = "존재하지 않는 게시글")
+    })
+    public BaseResponse<String> togglePostLike(
+            @PathVariable("post-id") Long postId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        String message = postService.togglePostLike(userPrincipal.getId(), postId);
+        return BaseResponse.onSuccess(SuccessStatus.POST_LIKE_TOGGLE_SUCCESS, message);
+    }
+
+    // 댓글 좋아요
+    @PostMapping("/{reply-id}/like/replies")
+    @Operation(summary = "댓글 좋아요 토글", description = "특정 댓글에 대해 좋아요를 추가하거나 취소합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "LIKE_200", description = "좋아요 토글 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
+            @ApiResponse(responseCode = "REPLY_4001", description = "존재하지 않는 댓글")
+    })
+    public BaseResponse<String> toggleReplyLike(
+            @PathVariable("reply-id") Long replyId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        String message = postService.toggleReplyLike(userPrincipal.getId(), replyId);
+        return BaseResponse.onSuccess(SuccessStatus.REPLY_LIKE_TOGGLE_SUCCESS, message);
+    }
 }

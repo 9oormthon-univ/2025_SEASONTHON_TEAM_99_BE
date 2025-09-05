@@ -39,6 +39,18 @@ public class PostResponseDTO {
         private LocalDateTime createdAt;
     }
 
+    // 지역별 게시글 목록 조회
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PostRegionListResponse {
+        private Long postId;
+        private String title;
+        private String regionName;
+        private LocalDateTime createdAt;
+    }
+
     // 글 상세 조회
     @Getter
     @Builder
@@ -66,7 +78,6 @@ public class PostResponseDTO {
         private boolean isAnonymous;
         private LocalDateTime updatedAt;
     }
-
 
     // 댓글 작성
     @Getter
