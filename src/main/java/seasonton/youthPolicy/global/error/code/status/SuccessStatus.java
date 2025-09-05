@@ -22,6 +22,9 @@ public enum SuccessStatus {
     REPLY_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "REPLY_204", "댓글 삭제 성공"),
     POST_LIKE_TOGGLE_SUCCESS(HttpStatus.OK, "LIKE_200", "해당 정책에 좋아요 표시 완료"),
     REPLY_LIKE_TOGGLE_SUCCESS(HttpStatus.OK, "LIKE_200", "해당 댓글에 좋아요 표시 완료"),
+    VOTE_UPDATE_SUCCESS(HttpStatus.OK, "VOTE_200", "투표 수정 성공"),
+    VOTE_READ_SUCCESS(HttpStatus.OK, "VOTE_200", "투표 조회 성공"),
+    VOTE_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "VOTE_204", "투표 삭제 성공"),
 
     // policy
     POLICY_READ_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 조회 성공"),

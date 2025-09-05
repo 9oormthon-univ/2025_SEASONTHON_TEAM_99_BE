@@ -10,6 +10,8 @@ import seasonton.youthPolicy.domain.post.domain.entity.*;
 import seasonton.youthPolicy.domain.post.domain.repository.*;
 import seasonton.youthPolicy.domain.post.dto.PostRequestDTO;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
+import seasonton.youthPolicy.domain.post.dto.VoteRequestDTO;
+import seasonton.youthPolicy.domain.post.dto.VoteResponseDTO;
 import seasonton.youthPolicy.domain.post.exception.PostException;
 import seasonton.youthPolicy.domain.model.entity.Region;
 import seasonton.youthPolicy.domain.member.domain.entity.User;
@@ -20,6 +22,7 @@ import seasonton.youthPolicy.global.dto.S3DTO;
 import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 import seasonton.youthPolicy.global.service.S3Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -35,22 +38,28 @@ public class PostService {
     private final RegionRepository regionRepository;
     private final PostLikeRepository postLikeRepository;
     private final ReplyLikeRepository replyLikeRepository;
+    private final PostVoteRepository postVoteRepository;
 
     @Value("${minio.dir.post-image}")
     private String postDIr;
 
     // 글 작성
     @Transactional
-    public PostResponseDTO.PostCreateResponse createPost(Long userId, String title, String content, Long regionId, boolean isAnonymous, List<MultipartFile> images) {
+    public PostResponseDTO.PostCreateResponse createPost(Long userId, String title, String content,
+                                                         Long regionId, boolean isAnonymous,
+                                                         List<MultipartFile> images,
+                                                         String question, List<String> options,
+                                                         LocalDateTime endDate, boolean multipleChoice) {
 
-        // 유저 검증 및 정보 불러오기
+        // 유저 검증
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
 
-        // regionId로 지역 정보 조회
+        // 지역 검증
         Region region = regionRepository.findById(regionId)
                 .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND));
 
+        // 게시글 저장
         Posts post = Posts.builder()
                 .title(title)
                 .content(content)
@@ -62,10 +71,114 @@ public class PostService {
 
         postRepository.save(post);
 
-        savePostImages(images, post);
+        // 이미지 저장 (있을 때만)
+        if (images != null && !images.isEmpty()) {
+            savePostImages(images, post);
+        }
 
+        // 투표 저장 (질문/옵션이 있을 경우)
+        if (question != null && !question.isBlank() && options != null && !options.isEmpty()) {
+            PostVote vote = PostVote.builder()
+                    .question(question)
+                    .endDate(endDate)
+                    .multipleChoice(multipleChoice)
+                    .post(post)
+                    .build();
+
+            List<PostVoteOption> optionEntities = options.stream()
+                    .map(opt -> PostVoteOption.builder()
+                            .optionText(opt)
+                            .vote(vote)
+                            .build())
+                    .toList();
+
+            vote.getOptions().addAll(optionEntities);
+
+            postVoteRepository.save(vote);
+        }
+
+        // 응답 반환
         return PostConverter.toPostCreateResponse(post, region);
     }
+
+    // 투표 수정
+    @Transactional
+    public PostResponseDTO.PostUpdateResponse updateVote(Long postId, Long userId,
+                                                         String question, List<String> options, LocalDateTime endDate, boolean multipleChoice) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new PostException(ErrorStatus.POST_FORBIDDEN);
+        }
+
+        PostVote vote = postVoteRepository.findByPost(post)
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        List<PostVoteOption> newOptions = options.stream()
+                .map(opt -> PostVoteOption.builder()
+                        .optionText(opt)
+                        .vote(vote)
+                        .build())
+                .toList();
+
+        // 엔티티 메서드 호출
+        vote.updateVote(question, endDate, multipleChoice, newOptions);
+
+        postVoteRepository.save(vote);
+
+        return PostConverter.toPostUpdateResponse(post);
+    }
+
+    // 투표 조회
+    public VoteResponseDTO.PostVoteResponse getVote(Long postId) {
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        PostVote vote = postVoteRepository.findByPost(post)
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        List<VoteResponseDTO.PostVoteResponse.OptionResponse> optionResponses = vote.getOptions().stream()
+                .map(opt -> VoteResponseDTO.PostVoteResponse.OptionResponse.builder()
+                        .optionId(opt.getId())
+                        .optionText(opt.getOptionText())
+                        .voteCount(opt.getVoteCount())
+                        .build())
+                .toList();
+
+        return VoteResponseDTO.PostVoteResponse.builder()
+                .voteId(vote.getId())
+                .question(vote.getQuestion())
+                .multipleChoice(vote.isMultipleChoice())
+                .endDate(vote.getEndDate())
+                .options(optionResponses)
+                .build();
+    }
+
+    // 투표 삭제
+    @Transactional
+    public void deleteVote(Long postId, Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
+
+        if (!post.getUser().getId().equals(userId)) {
+            throw new PostException(ErrorStatus.POST_FORBIDDEN);
+        }
+
+        PostVote vote = postVoteRepository.findByPost(post)
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        // 삭제 (옵션은 cascade = ALL, orphanRemoval = true 이므로 자동 삭제)
+        postVoteRepository.delete(vote);
+    }
+
 
     // 글 목록 조회
     public List<PostResponseDTO.PostListResponse> getPosts() {

@@ -30,7 +30,7 @@ public enum ErrorStatus {
     POST_FORBIDDEN(HttpStatus.FORBIDDEN, "POST_4003", "해당 게시글에 대한 권한이 없습니다."),
     REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "REPLY_4001", "존재하지 않는 댓글입니다."),
     REPLY_FORBIDDEN(HttpStatus.FORBIDDEN, "REPLY_4002", "해당 댓글에 대한 권한이 없습니다."),
-    POST_LIKE_TOGGLE_SUCCESS(HttpStatus.OK, "LIKE_200", "게시글 좋아요 토글 성공"),
+    VOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "VOTE_4001", "존재하지 않는 투표입니다."),
 
 
     // region
