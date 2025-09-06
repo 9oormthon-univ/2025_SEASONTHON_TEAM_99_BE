@@ -37,7 +37,7 @@
 <img width="292" height="758" alt="image" src="https://github.com/user-attachments/assets/af407255-ed0c-4f98-9f66-eaec60e1629b" />
 
 
-  <br>
+<br>
   
 ## ✏ 네이밍 컨벤션
 | **종류**             | **방식**               | **예시**                                |
@@ -54,14 +54,14 @@
 - 테이블: post_likes
 - 컬럼: created_at
 - FK: post_likes_id
-  <br>
+<br>
   
 ## 📡 API 규약
 - GET    /posts
 - POST   /posts
 - PATCH  /posts/{id}
 - DELETE /posts/{id}
-  <br>
+<br>
   
 ## 🛠 Tech Stack
 
@@ -75,7 +75,7 @@
 | 💻 Language  | ![Java](https://img.shields.io/badge/Java-007396?logo=java&logoColor=white) |
 | 📱 Framework | ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white) ![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white) |
 | 🤝 CI/CD & Collaboration | ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white) |
-  <br>
+<br>
   
 ## Infra Structure
 <img width="1404" height="750" alt="infra" src="https://github.com/user-attachments/assets/50895906-1073-4819-8d4c-da2afa2eb3c7" />
