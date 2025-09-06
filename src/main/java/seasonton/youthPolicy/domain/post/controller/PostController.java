@@ -5,6 +5,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -65,7 +70,7 @@ public class PostController {
     }
 
     // 투표 수정
-    @PatchMapping("/{postId}/vote")
+    @PatchMapping("/vote/{postId}/update")
     @Operation(
             summary = "투표 수정",
             description = "특정 게시글에 연결된 투표를 수정합니다. 작성자만 수정할 수 있습니다."
@@ -98,7 +103,7 @@ public class PostController {
     }
 
     // 투표 조회
-    @GetMapping("/{postId}/vote")
+    @GetMapping("/vote/{post-id}/read")
     @Operation(
             summary = "투표 조회",
             description = "특정 게시글에 연결된 투표 정보를 조회합니다."
@@ -108,13 +113,13 @@ public class PostController {
             @ApiResponse(responseCode = "POST_4004", description = "존재하지 않는 게시글"),
             @ApiResponse(responseCode = "VOTE_4004", description = "존재하지 않는 투표")
     })
-    public BaseResponse<VoteResponseDTO.PostVoteResponse> getVote(@PathVariable Long postId) {
+    public BaseResponse<VoteResponseDTO.PostVoteResponse> getVote(@PathVariable("post-id") Long postId) {
         VoteResponseDTO.PostVoteResponse response = postService.getVote(postId);
         return BaseResponse.onSuccess(SuccessStatus.VOTE_READ_SUCCESS, response);
     }
 
     // 투표 삭제
-    @DeleteMapping("/{postId}/vote")
+    @DeleteMapping("/vote/{post-id}/delete")
     @Operation(
             summary = "투표 삭제",
             description = "특정 게시글에 연결된 투표를 삭제합니다. 작성자만 삭제할 수 있습니다."
@@ -127,38 +132,63 @@ public class PostController {
             @ApiResponse(responseCode = "POST_403", description = "게시글 작성자가 아님")
     })
     public BaseResponse<Void> deleteVote(
-            @PathVariable Long postId,
+            @PathVariable("post-id") Long postId,
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         postService.deleteVote(postId, userPrincipal.getId());
         return BaseResponse.onSuccess(SuccessStatus.VOTE_DELETE_SUCCESS, null);
     }
 
+    // 투표 하기
+    @PostMapping("/vote/do-vote")
+    @Operation(summary = "투표하기", description = "로그인된 사용자만 투표할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "VOTE_200", description = "투표 성공"),
+            @ApiResponse(responseCode = "USER_4001", description = "존재하지 않는 유저"),
+            @ApiResponse(responseCode = "VOTE_4001", description = "존재하지 않는 투표"),
+            @ApiResponse(responseCode = "VOTE_4002", description = "유효하지 않은 옵션"),
+            @ApiResponse(responseCode = "VOTE_4003", description = "중복 선택 불가 투표에서 복수 선택 시도"),
+            @ApiResponse(responseCode = "VOTE_4004", description = "투표 종료됨")
+    })
+    public BaseResponse<VoteResponseDTO.PostVoteResponse> doVote(
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @RequestBody VoteRequestDTO.VoteRequest request
+    ) {
+        VoteResponseDTO.PostVoteResponse response = postService.vote(userPrincipal.getId(), request);
+        return BaseResponse.onSuccess(SuccessStatus.VOTE_SUCCESS, response);
+    }
 
     // 글 목록 조회
     @GetMapping("/list")
     @Operation(
             summary = "게시글 목록 조회",
-            description = "모든 게시글을 최신순(createdAt DESC)으로 조회합니다."
+            description = "모든 게시글을 최신순(createdAt DESC)으로 페이지 단위로 조회합니다."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "POST_200", description = "게시글 목록 조회 성공")
     })
-    public BaseResponse<List<PostResponseDTO.PostListResponse>> getPosts() {
-
-        List<PostResponseDTO.PostListResponse> response = postService.getPosts();
+    public BaseResponse<Page<PostResponseDTO.PostListResponse>> getPosts(
+            @RequestParam(defaultValue = "1") int pageNum,     // 0부터 시작
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<PostResponseDTO.PostListResponse> response = postService.getPosts(pageable);
         return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, response);
     }
 
     // 게시글 좋아요 순 조회
     @GetMapping("/like-ranking")
-    @Operation(summary = "게시글 좋아요 순 조회", description = "좋아요 개수가 많은 순으로 게시글을 조회합니다.")
+    @Operation(summary = "게시글 좋아요 순 조회", description = "좋아요 개수가 많은 순으로 페이지 단위 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "POST_200", description = "좋아요 순 조회 성공")
     })
-    public BaseResponse<List<PostResponseDTO.PostLikeListResponse>> getPostsOrderByLikeCount() {
-        List<PostResponseDTO.PostLikeListResponse> data = postService.getPostsOrderByLikeCount();
-        return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, data);
+    public BaseResponse<Page<PostResponseDTO.PostLikeListResponse>> getPostsOrderByLikeCount(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize); // 정렬은 JPQL 쿼리에서 처리
+        Page<PostResponseDTO.PostLikeListResponse> response = postService.getPostsOrderByLikeCount(pageable);
+        return BaseResponse.onSuccess(SuccessStatus.POST_READ_SUCCESS, response);
     }
 
     // 지역 기반 글 목록 조회

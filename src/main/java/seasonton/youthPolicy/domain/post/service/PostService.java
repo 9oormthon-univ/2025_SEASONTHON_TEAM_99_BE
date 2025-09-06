@@ -2,6 +2,8 @@ package seasonton.youthPolicy.domain.post.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +25,7 @@ import seasonton.youthPolicy.global.error.code.status.ErrorStatus;
 import seasonton.youthPolicy.global.service.S3Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -39,6 +42,8 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final ReplyLikeRepository replyLikeRepository;
     private final PostVoteRepository postVoteRepository;
+    private final PostVoteOptionRepository postVoteOptionRepository;
+    private final PostVoteRecordRepository postVoteRecordRepository;
 
     @Value("${minio.dir.post-image}")
     private String postDIr;
@@ -179,35 +184,97 @@ public class PostService {
         postVoteRepository.delete(vote);
     }
 
+    // 투표하기
+    @Transactional
+    public VoteResponseDTO.PostVoteResponse vote(Long userId, VoteRequestDTO.VoteRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(ErrorStatus.USER_NOT_FIND));
+
+        PostVote vote = postVoteRepository.findById(request.getVoteId())
+                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+
+        // 투표 마감 여부 확인
+        if (vote.getEndDate() != null && vote.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new PostException(ErrorStatus.VOTE_EXPIRED);
+        }
+
+        // 단일 선택만 가능한데 여러 개 선택한 경우
+        if (!vote.isMultipleChoice() && request.getOptionIds().size() > 1) {
+            throw new PostException(ErrorStatus.VOTE_MULTIPLE_NOT_ALLOWED);
+        }
+
+        // 기존 투표 기록 조회 & 제거
+        List<PostVoteRecord> existingRecords = postVoteRecordRepository.findAllByVoteAndUser(vote, user);
+        for (PostVoteRecord record : existingRecords) {
+            PostVoteOption oldOption = record.getOption();
+            oldOption.decreaseVoteCount();
+            postVoteOptionRepository.save(oldOption);
+            postVoteRecordRepository.delete(record);
+        }
+
+        // 새 투표 반영
+        List<VoteResponseDTO.PostVoteResponse.OptionResponse> optionResponses = new ArrayList<>();
+
+        for (Long optionId : request.getOptionIds()) {
+            PostVoteOption option = postVoteOptionRepository.findById(optionId)
+                    .orElseThrow(() -> new PostException(ErrorStatus.VOTE_OPTION_INVALID));
+
+            option.increaseVoteCount();
+            postVoteOptionRepository.save(option);
+
+            postVoteRecordRepository.save(
+                    PostVoteRecord.builder()
+                            .user(user)
+                            .vote(vote)
+                            .option(option)
+                            .build()
+            );
+
+            optionResponses.add(
+                    VoteResponseDTO.PostVoteResponse.OptionResponse.builder()
+                            .optionId(option.getId())
+                            .optionText(option.getOptionText())
+                            .voteCount(option.getVoteCount())
+                            .build()
+            );
+        }
+
+        // 최종 응답 DTO 반환
+        return VoteResponseDTO.PostVoteResponse.builder()
+                .voteId(vote.getId())
+                .question(vote.getQuestion())
+                .multipleChoice(vote.isMultipleChoice())
+                .endDate(vote.getEndDate())
+                .options(optionResponses)
+                .build();
+    }
+
+
 
     // 글 목록 조회
-    public List<PostResponseDTO.PostListResponse> getPosts() {
-        return postRepository.findAllWithRegionOrderByCreatedAtDesc()
-                .stream()
-                .map(post -> {
-                    Long likeCnt = postLikeRepository.countByPostId(post.getId());
-                    return PostConverter.toPostListResponse(post, likeCnt);
-                }) // 여기서 컨버터 사용
-                .toList();
+    public Page<PostResponseDTO.PostListResponse> getPosts(Pageable pageable) {
+        Page<Posts> postsPage = postRepository.findAllWithRegion(pageable);
 
+        return postsPage.map(post -> {
+            Long likeCnt = postLikeRepository.countByPostId(post.getId());
+            return PostConverter.toPostListResponse(post, likeCnt);
+        });
     }
 
     // 게시글 좋아요 순 목록 조회
-    @Transactional(readOnly = true)
-    public List<PostResponseDTO.PostLikeListResponse> getPostsOrderByLikeCount() {
+    public Page<PostResponseDTO.PostLikeListResponse> getPostsOrderByLikeCount(Pageable pageable) {
+        Page<Posts> postsPage = postRepository.findAllOrderByLikeCountDesc(pageable);
 
-        List<Posts> posts = postRepository.findAllOrderByLikeCountDesc();
-
-        return posts.stream()
-                .map(post -> PostResponseDTO.PostLikeListResponse.builder()
+        return postsPage.map(post ->
+                PostResponseDTO.PostLikeListResponse.builder()
                         .id(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
                         .regionName(post.getRegion().getRegionName())
-                        .likeCount((long) post.getPostLikes().size()) // 바로 엔티티에서 개수 가져오기
+                        .likeCount((long) post.getPostLikes().size())
                         .createdAt(post.getCreatedAt())
-                        .build())
-                .toList();
+                        .build()
+        );
     }
 
 

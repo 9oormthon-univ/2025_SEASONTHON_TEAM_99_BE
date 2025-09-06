@@ -23,4 +23,14 @@ public class PostVoteOption extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vote_id")
     private PostVote vote;
+
+    public void increaseVoteCount() {
+        this.voteCount++;
+    }
+
+    public void decreaseVoteCount() {
+        if (this.voteCount > 0) {
+            this.voteCount--;
+        }
+    }
 }

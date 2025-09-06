@@ -27,6 +27,8 @@ public enum SuccessStatus {
     VOTE_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "VOTE_204", "투표 삭제 성공"),
     REPLY_LIKE_COUNT_SUCCESS(HttpStatus.OK, "LIKE_200", "게시글 댓글 좋아요 개수 카운트"),
     POST_LIKE_COUNT_SUCCESS(HttpStatus.OK, "LIKE_200", "게시글 좋아요 개수 조회 완료"),
+    VOTE_SUCCESS(HttpStatus.OK, "VOTE_200", "투표가 성공적으로 완료되었습니다."),
+
     // policy
     POLICY_READ_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 조회 성공"),
     POLICY_STATUS_SUCCESS(HttpStatus.OK, "POLICY_200", "정책 상태 조회 성공"),
