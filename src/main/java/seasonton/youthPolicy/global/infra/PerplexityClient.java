@@ -29,15 +29,35 @@ public class PerplexityClient {
     private String model;
 
     @Value("classpath:templates/chat-start-prompt.st")
-    private Resource summarizePr;
-    private String systemPrompt;
+    private Resource summarizePr1;
+
+    @Value("classpath:templates/reply-summary-prompt.st")
+    private Resource summarizePr2;
+
+    @Value("classpath:templates/reply-filtering-prompt.st")
+    private Resource summarizePr3;
+
+    private String reportPrompt;
+    private String replyPrompt;
+    private String filteringPrompt;
 
     @PostConstruct
     public void init() {
-        this.systemPrompt = promptHolder.reportPrompt(summarizePr);
+        this.reportPrompt = promptHolder.reportPrompt(summarizePr1);
+        this.replyPrompt = promptHolder.reportPrompt(summarizePr2);
+        this.filteringPrompt = promptHolder.reportPrompt(summarizePr3);
     }
 
-    public PerplexityChatResponse summarize(String content) {
+    public PerplexityChatResponse summarize(String content, int type) {
+
+        String systemPrompt;
+        switch (type) {
+            case 1 -> systemPrompt = reportPrompt;
+            case 2  -> systemPrompt = replyPrompt;
+            case 3 -> systemPrompt = filteringPrompt;
+            default -> throw new IllegalArgumentException("Unknown type: " + type);
+        }
+
         var req = PerplexityChatRequest.builder()
                 .model(model)
                 .messages(new PerplexityMessage[]{
