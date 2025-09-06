@@ -217,12 +217,16 @@ public class PostService {
                 .orElseThrow(() -> new PostException(ErrorStatus.REGION_NOT_FOUND));
 
         return postRepository.findByRegion(region).stream()
-                .map(post -> PostResponseDTO.PostRegionListResponse.builder()
+                .map(post -> {
+                    Long likeCnt = postLikeRepository.countByPostId(post.getId());
+                    return PostResponseDTO.PostRegionListResponse.builder()
                         .postId(post.getId())
                         .title(post.getTitle())
                         .regionName(region.getRegionName())
                         .createdAt(post.getCreatedAt())
-                        .build())
+                        .likeCount(likeCnt)
+                        .build();
+                })
                 .toList();
     }
 

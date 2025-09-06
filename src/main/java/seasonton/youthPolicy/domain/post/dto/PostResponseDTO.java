@@ -67,6 +67,7 @@ public class PostResponseDTO {
         private String title;
         private String regionName;
         private LocalDateTime createdAt;
+        private Long likeCount;
     }
 
     // 글 상세 조회
