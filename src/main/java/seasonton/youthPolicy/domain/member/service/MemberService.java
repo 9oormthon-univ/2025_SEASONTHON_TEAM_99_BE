@@ -37,7 +37,7 @@ public class MemberService {
     @Value("${minio.dir.user-image}")
     private String userDir;
 
-    public User create(MemberCreateDto memberCreateDto) {
+    public String create(MemberCreateDto memberCreateDto) {
         if (userRepository.existsByEmail(memberCreateDto.getEmail())){
             throw new RuntimeException("User already registered!");
         }
@@ -62,7 +62,7 @@ public class MemberService {
         User user = builder.build();
         userRepository.save(user);
 
-        return user;
+        return "login success!";
     }
 
     public User login(MemberLoginDto memberLoginDto) {
