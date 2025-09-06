@@ -123,6 +123,12 @@ public class YouthPolicyService {
                     }
                 }
 
+                // 17개 지역이 전부 들어있으면 "전국"으로 교체
+                if (regionSet.containsAll(ALL_REGIONS)) {
+                    regionSet.clear();
+                    regionSet.add("전국");
+                }
+
                 String startDate = item.path("bizPrdBgngYmd").asText(null);
                 String endDate = item.path("bizPrdEndYmd").asText(null);
                 PolicyStatus status = calculateStatus(startDate, endDate);
@@ -208,6 +214,12 @@ public class YouthPolicyService {
                     }
                 }
 
+                // 17개 지역이 전부 들어있으면 "전국"으로 교체
+                if (regionSet.containsAll(ALL_REGIONS)) {
+                    regionSet.clear();
+                    regionSet.add("전국");
+                }
+
                 String startDate = item.path("bizPrdBgngYmd").asText(null);
                 String endDate = item.path("bizPrdEndYmd").asText(null);
                 PolicyStatus status = calculateStatus(startDate, endDate);
@@ -249,9 +261,6 @@ public class YouthPolicyService {
             throw new PolicyException(ErrorStatus.POLICY_API_ERROR);
         }
     }
-
-
-
 
     // 정책 상태 조회
     public PolicyResponseDTO.PolicyStatusResponse getPolicyStatus(String plcyNo) {
@@ -674,6 +683,11 @@ public class YouthPolicyService {
                             if (!matched) continue;
                         }
 
+                        // 17개 지역이 전부 들어있으면 "전국"으로 교체
+                        if (regionSet.containsAll(ALL_REGIONS)) {
+                            regionSet.clear();
+                            regionSet.add("전국");
+                        }
 
                         // 좋아요 수
                         Long likeCount = policyLikeRepository.countByPlcyNo(plcyNo);
@@ -700,10 +714,6 @@ public class YouthPolicyService {
                         );
                     }
                 }
-            }
-
-            if (results.isEmpty()) {
-                throw new PolicyException(ErrorStatus.POLICY_NOT_FOUND);
             }
 
             // 최신순 정렬
@@ -762,6 +772,15 @@ public class YouthPolicyService {
         // 못 찾으면 그대로 반환
         return fullRegionName.split(" ")[0];
     }
+
+    // 17개 시/도 이름 집합
+    private static final Set<String> ALL_REGIONS = Set.of(
+            "서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시",
+            "대전광역시", "울산광역시", "세종특별자치시",
+            "경기도", "강원특별자치도", "충청북도", "충청남도", "전북특별자치도", "전라남도",
+            "경상북도", "경상남도", "제주특별자치도"
+    );
+
 
     //진행 상태 계산
     private PolicyStatus calculateStatus(String startDate, String endDate) {

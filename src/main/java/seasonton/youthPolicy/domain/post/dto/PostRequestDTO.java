@@ -20,7 +20,6 @@ public class PostRequestDTO {
     public static class ReplyCreateRequest {
 
         private String content;
-//        private boolean isAnonymous;
     }
 
     // 댓글 수정
