@@ -195,6 +195,7 @@ public class PostService {
     // 게시글 좋아요 순 목록 조회
     @Transactional(readOnly = true)
     public List<PostResponseDTO.PostLikeListResponse> getPostsOrderByLikeCount() {
+
         List<Posts> posts = postRepository.findAllOrderByLikeCountDesc();
 
         return posts.stream()
@@ -202,6 +203,7 @@ public class PostService {
                         .id(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
+                        .regionName(post.getRegion().getRegionName())
                         .likeCount((long) post.getPostLikes().size()) // 바로 엔티티에서 개수 가져오기
                         .createdAt(post.getCreatedAt())
                         .build())

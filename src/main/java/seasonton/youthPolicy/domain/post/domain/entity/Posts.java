@@ -42,6 +42,10 @@ public class Posts extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> postLikes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostImage> postImages = new ArrayList<>();
+
+
     // 글 수정 관련
     public void updatePost(String title, String content, boolean isAnonymous, String writer, Region region) {
         this.title = title;
