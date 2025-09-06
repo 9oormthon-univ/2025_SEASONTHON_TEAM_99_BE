@@ -77,4 +77,5 @@
 <br>
   
 ## Infra Structure
-<img width="1404" height="750" alt="infra" src="https://github.com/user-attachments/assets/50895906-1073-4819-8d4c-da2afa2eb3c7" />
+<img width="694" height="488" alt="infra" src="https://github.com/user-attachments/assets/1b7e2149-5381-4670-a896-4fd7328d7b39" />
+
