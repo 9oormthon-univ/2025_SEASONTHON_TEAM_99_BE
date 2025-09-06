@@ -17,6 +17,7 @@ import seasonton.youthPolicy.domain.member.service.MemberService;
 import seasonton.youthPolicy.global.auth.JwtTokenProvider;
 import seasonton.youthPolicy.global.dto.TokenDTO;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -29,7 +30,7 @@ public class MemberController {
 
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "회원가입", description = "청정 자체 계정 회원가입 (regionId에는 매핑 전 id번호를 넣어주세요)")
-    public ResponseEntity<User> signup(
+    public ResponseEntity<Map<String, String>> signup(
             @RequestParam String email,
             @RequestParam String password,
             @RequestParam String nickname,
@@ -37,8 +38,10 @@ public class MemberController {
             @RequestPart("imageFile") MultipartFile imageFile
     ){
         MemberCreateDto memberCreateDto = new MemberCreateDto(email, password, nickname, regionId, imageFile);
-        User user = memberService.create(memberCreateDto);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        String result = memberService.create(memberCreateDto);
+        Map<String, String> status = new HashMap<>();;
+        status.put("result", result);
+        return new ResponseEntity<>(status, HttpStatus.CREATED);
     }
 
     @PostMapping("/doLogin")
