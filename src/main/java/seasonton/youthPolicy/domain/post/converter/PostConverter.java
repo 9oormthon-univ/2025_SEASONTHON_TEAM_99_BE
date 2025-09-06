@@ -1,10 +1,7 @@
 package seasonton.youthPolicy.domain.post.converter;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import seasonton.youthPolicy.domain.post.domain.entity.Posts;
 import seasonton.youthPolicy.domain.post.domain.entity.Reply;
-import seasonton.youthPolicy.domain.post.domain.repository.PostLikeRepository;
 import seasonton.youthPolicy.domain.post.dto.PostResponseDTO;
 import seasonton.youthPolicy.domain.model.entity.Region;
 
@@ -40,8 +37,18 @@ public class PostConverter {
                 .postId(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .regionName(post.getRegion().getRegionName())
+                .regionName(post.getRegion().getRegionName()) // Region 엔티티에 name 필드가 있다고 가정
                 .createdAt(post.getCreatedAt())
+                .postImages(
+                        post.getPostImages().stream()
+                                .map(img -> PostResponseDTO.PostDetailResponse.ImageResponse.builder()
+                                        .id(img.getId())
+                                        .originalName(img.getOriginalName())
+                                        .imageUrl(img.getImageUrl())
+                                        .build()
+                                )
+                                .toList()
+                )
                 .build();
     }
 

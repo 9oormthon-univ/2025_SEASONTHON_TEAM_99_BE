@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import seasonton.youthPolicy.domain.post.domain.entity.PostImage;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PostResponseDTO {
 
@@ -50,6 +52,7 @@ public class PostResponseDTO {
         private String title;
         private String content;
         private Long likeCount;
+        private String regionName;
         private LocalDateTime createdAt;
     }
 
@@ -78,6 +81,17 @@ public class PostResponseDTO {
         private String content;
         private String regionName;
         private LocalDateTime createdAt;
+        private List<ImageResponse> postImages;
+
+        @Getter
+        @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class ImageResponse {
+            private Long id;
+            private String originalName;
+            private String imageUrl;
+        }
     }
 
     // 글 수정
