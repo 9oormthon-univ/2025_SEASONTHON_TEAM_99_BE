@@ -4,13 +4,14 @@
 
 # 프로젝트 컨벤션 가이드
   
----
+<br>
 
 ## 🌿 브랜치 전략
 - main(배포)
 - develop(개발진행중)
 - 작업 브랜치 작명 -> 예) feat/post, feat/post-vote
-  
+<br>
+
 ### 🔖 이슈 관리 라벨
 
 - `feat/` 기능 추가
@@ -20,8 +21,7 @@
 - `devops/` 데브옵스
 - `docs/` 문서 파일 추가
 - `chore/` 기존 코드 수정
-
----
+<br>
   
 ## 💬 커밋 메세지 컨벤션
 
@@ -30,7 +30,8 @@
   ```bash
   feat/post: add like count API
   ```
-  
+  <br>
+
 ## 🏗 프로젝트 패키지 아키텍처
 - 도메인 기반 디렉터리 구조(DDD)
 ⎿ global
@@ -50,6 +51,7 @@
     ⎿ service
     ⎿ exception
   ...
+  <br>
   
 ## ✏ 네이밍 컨벤션
 | **종류**             | **방식**               | **예시**                                |
@@ -57,7 +59,7 @@
 | 클래스 / 인터페이스   | `PascalCase`           | `PostService`, `UserController`         |
 | 패키지 / 변수 / 메서드 | `camelCase`            | `getUserById()`, `postList`             |
 | 상수                  | `SCREAMING_SNAKE_CASE` | `MAX_SIZE`, `API_KEY` 
-
+<br>
   
 ## 🗄 DB 네이밍 컨벤션
 
@@ -66,12 +68,14 @@
 - 테이블: post_likes
 - 컬럼: created_at
 - FK: post_likes_id
+  <br>
   
 ## 📡 API 규약
 - GET    /posts
 - POST   /posts
 - PATCH  /posts/{id}
 - DELETE /posts/{id}
+  <br>
   
 ## 🛠 Tech Stack
 
@@ -85,6 +89,7 @@
 | 💻 Language  | ![Java](https://img.shields.io/badge/Java-007396?logo=java&logoColor=white) |
 | 📱 Framework | ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white) ![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white) |
 | 🤝 CI/CD & Collaboration | ![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white) |
+  <br>
   
 ## Infra Structure
 <img width="1404" height="750" alt="infra" src="https://github.com/user-attachments/assets/50895906-1073-4819-8d4c-da2afa2eb3c7" />
