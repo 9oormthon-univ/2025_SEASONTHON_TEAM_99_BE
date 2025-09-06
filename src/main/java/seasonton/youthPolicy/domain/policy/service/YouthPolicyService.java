@@ -386,6 +386,11 @@ public class YouthPolicyService {
                 }
             }
 
+            // 17개 지역이 전부 들어있으면 "전국"으로 교체
+            if (regionSet.containsAll(ALL_REGIONS)) {
+                regionSet.clear();
+                regionSet.add("전국");
+            }
 
             return PolicyResponseDTO.YouthPolicyDetailResponse.builder()
                     .plcyNo(item.path("plcyNo").asText(null))
