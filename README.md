@@ -70,7 +70,6 @@
 | 🔐 Security  | ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-black?logo=jsonwebtokens&logoColor=white) |
 | 🗄 Database  | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white) ![Spring Data JPA](https://img.shields.io/badge/Spring%20Data%20JPA-6DB33F?logo=spring&logoColor=white) ![RDS](https://img.shields.io/badge/AWS%20RDS-527FFF?logo=amazonrds&logoColor=white) |
 | ☁ Infra      | ![AWS ECS](https://img.shields.io/badge/AWS%20ECS-FF9900?logo=amazonecs&logoColor=white) ![AWS ECR](https://img.shields.io/badge/Amazon%20ECR-FF9900?logo=amazonaws&logoColor=white) ![MinIO](https://img.shields.io/badge/MinIO-C72E49?logo=minio&logoColor=white) ![S3](https://img.shields.io/badge/AWS%20S3-569A31?logo=amazons3&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) |
-| 🚀 Deployment | ![CodeDeploy](https://img.shields.io/badge/AWS%20CodeDeploy-6DB33F?logo=aws&logoColor=white) |
 | 📡 API       | ![공공데이터](https://img.shields.io/badge/OpenAPI%20Public%20Data-blue) ![Perplexity LLM](https://img.shields.io/badge/Perplexity%20LLM-7B68EE?logo=openai&logoColor=white) |
 | 💻 Language  | ![Java](https://img.shields.io/badge/Java-007396?logo=java&logoColor=white) |
 | 📱 Framework | ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white) |
