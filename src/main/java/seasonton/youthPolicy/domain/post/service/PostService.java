@@ -27,6 +27,7 @@ import seasonton.youthPolicy.global.service.S3Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -143,16 +144,22 @@ public class PostService {
         Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(ErrorStatus.POST_NOT_FOUND));
 
-        PostVote vote = postVoteRepository.findByPost(post)
-                .orElseThrow(() -> new PostException(ErrorStatus.VOTE_NOT_FOUND));
+        // 투표가 없는 게시글이면 null 반환
+        Optional<PostVote> optionalVote = postVoteRepository.findByPost(post);
+        if (optionalVote.isEmpty()) {
+            return null;
+        }
 
-        List<VoteResponseDTO.PostVoteResponse.OptionResponse> optionResponses = vote.getOptions().stream()
-                .map(opt -> VoteResponseDTO.PostVoteResponse.OptionResponse.builder()
-                        .optionId(opt.getId())
-                        .optionText(opt.getOptionText())
-                        .voteCount(opt.getVoteCount())
-                        .build())
-                .toList();
+        PostVote vote = optionalVote.get();
+
+        List<VoteResponseDTO.PostVoteResponse.OptionResponse> optionResponses =
+                vote.getOptions().stream()
+                        .map(opt -> VoteResponseDTO.PostVoteResponse.OptionResponse.builder()
+                                .optionId(opt.getId())
+                                .optionText(opt.getOptionText())
+                                .voteCount(opt.getVoteCount())
+                                .build())
+                        .toList();
 
         return VoteResponseDTO.PostVoteResponse.builder()
                 .voteId(vote.getId())
@@ -162,6 +169,7 @@ public class PostService {
                 .options(optionResponses)
                 .build();
     }
+
 
     // 투표 삭제
     @Transactional
