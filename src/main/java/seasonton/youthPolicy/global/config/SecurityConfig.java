@@ -43,12 +43,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/ping",
-                                "/user/signup",
-                                "/user/doLogin",
-                                "/user/nameCheck",
-                                "/user/emailCheck",
                                 "/youth/policies/**",
-                                "/posts/**"
+                                "/user/**",
+                                "/posts/**",
+                                "/reports/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
