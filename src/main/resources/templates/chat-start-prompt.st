@@ -7,4 +7,4 @@ Using the 5 provided community-posts, write a report:
 4) Actionable recommendation and suggestion (3-5 objects).
 
 Be precise, avoid fluff, and do NOT add citations or external info.
-Output in Korean.
+Output in Korean. NEVER INCLUDE ENGLISH.

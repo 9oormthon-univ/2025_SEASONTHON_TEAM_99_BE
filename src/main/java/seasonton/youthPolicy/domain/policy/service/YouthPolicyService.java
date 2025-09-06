@@ -564,7 +564,8 @@ public class YouthPolicyService {
                 .collect(Collectors.joining("\n"));
 
         perplexityDTO.PerplexityChatResponse resp = perplexityClient.summarize(
-                "다음은 정책 '" + plcyNm + "'에 대한 댓글들입니다. 핵심 의견을 요약해줘:\n" + combined
+                "다음은 정책 '" + plcyNm + "'에 대한 댓글들입니다. 핵심 의견을 요약해줘:\n" + combined,
+                2
         );
 
         String summary = resp.getChoices()[0].getMessage().getContent();
@@ -804,7 +805,7 @@ public class YouthPolicyService {
     private PolicyResponseDTO.ReplyFilterResponse filterComment(String content) {
         String prompt = "다음 댓글이 욕설/비방/스팸/도배라면 'BLOCK: 이유'로, 정상적이면 'OK'라고만 답해:\n" + content;
 
-        perplexityDTO.PerplexityChatResponse resp = perplexityClient.summarize(prompt);
+        perplexityDTO.PerplexityChatResponse resp = perplexityClient.summarize(prompt, 3);
         String answer = resp.getChoices()[0].getMessage().getContent().trim();
 
         if (answer.startsWith("OK")) {

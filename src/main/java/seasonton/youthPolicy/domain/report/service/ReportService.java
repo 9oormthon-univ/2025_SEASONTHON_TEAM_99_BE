@@ -67,7 +67,7 @@ public class ReportService {
         sb.append("요구사항: 위 게시글만 근거로 여론을 요약하고, 개선방향을 제시하세요. 출처 표기나 외부 검색은 금지합니다.");
 
         // 요약 생성
-        var finalRes = perplexityClient.summarize(sb.toString());
+        var finalRes = perplexityClient.summarize(sb.toString(), 1);
         String finalSummary = finalRes.getChoices()[0].getMessage().getContent();
 
         Report generatedReport = Report.builder()
