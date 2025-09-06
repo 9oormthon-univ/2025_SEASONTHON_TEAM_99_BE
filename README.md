@@ -34,23 +34,9 @@
 
 ## 🏗 프로젝트 패키지 아키텍처
 - 도메인 기반 디렉터리 구조(DDD)
-⎿ global
-  ⎿ common
-  ⎿ config
-  ⎿ error
-  ⎿ exception
-⎿ domain
-  ⎿ model
-  ⎿ feature1
-    ⎿ controller
-    ⎿ converter
-    ⎿ dto
-    ⎿ domain
-      ⎿ entity
-      ⎿ repository
-    ⎿ service
-    ⎿ exception
-  ...
+<img width="292" height="758" alt="image" src="https://github.com/user-attachments/assets/af407255-ed0c-4f98-9f66-eaec60e1629b" />
+
+
   <br>
   
 ## ✏ 네이밍 컨벤션
