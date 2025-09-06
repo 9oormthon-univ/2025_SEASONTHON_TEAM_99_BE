@@ -32,4 +32,27 @@ public class VoteResponseDTO {
         }
     }
 
+    // 투표하기
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class VoteResultResponse {
+        private Long voteId;
+        private String question;
+        private boolean multipleChoice;
+        private LocalDateTime endDate;
+        private List<OptionResult> options;
+
+        @Getter
+        @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class OptionResult {
+            private Long optionId;
+            private String optionText;
+            private int voteCount;
+            private boolean voted;   // 현재 사용자가 선택했는지 여부
+        }
+    }
 }

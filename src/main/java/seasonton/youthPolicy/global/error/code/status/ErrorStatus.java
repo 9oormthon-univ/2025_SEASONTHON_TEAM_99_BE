@@ -31,7 +31,9 @@ public enum ErrorStatus {
     REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "REPLY_4001", "존재하지 않는 댓글입니다."),
     REPLY_FORBIDDEN(HttpStatus.FORBIDDEN, "REPLY_4002", "해당 댓글에 대한 권한이 없습니다."),
     VOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "VOTE_4001", "존재하지 않는 투표입니다."),
-
+    VOTE_EXPIRED(HttpStatus.BAD_REQUEST, "VOTE_4001", "투표가 종료되었습니다."),
+    VOTE_MULTIPLE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "VOTE_4002", "복수 선택이 허용되지 않는 투표입니다."),
+    VOTE_OPTION_INVALID(HttpStatus.BAD_REQUEST, "VOTE_4003", "유효하지 않은 투표 옵션입니다."),
 
     // region
     REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "REGION_4001", "존재하지 않는 지역입니다."),

@@ -1,5 +1,6 @@
 package seasonton.youthPolicy.domain.post.domain.repository;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -40,4 +41,13 @@ public interface PostRepository extends JpaRepository<Posts, Long> {
             "GROUP BY p " +
             "ORDER BY COUNT(pl) DESC")
     List<Posts> findAllOrderByLikeCountDesc();
+
+    // 글 목록 조회
+    @Query("SELECT p FROM Posts p JOIN FETCH p.region r")
+    Page<Posts> findAllWithRegion(Pageable pageable);
+
+
+    // 좋아요 순 조회 페이징
+    @Query("SELECT p FROM Posts p LEFT JOIN p.postLikes pl GROUP BY p ORDER BY COUNT(pl) DESC")
+    Page<Posts> findAllOrderByLikeCountDesc(Pageable pageable);
 }
