@@ -2,8 +2,24 @@
 
 2025 [kakao X goorm] 시즌톤 - 청정 (BE)  
 
-# 프로젝트 컨벤션 가이드
+# ⭐프로젝트 소개
+<img width="1240" height="696" alt="청정 표지" src="https://github.com/user-attachments/assets/63fe2a61-edd1-480e-89f4-0d4fa8fbe01a" />
   
+## 💡플랫폼/창구 비교
+<img width="859" height="457" alt="image" src="https://github.com/user-attachments/assets/40408ebf-7def-4d43-87a3-429d21f78a0d" />
+
+
+## 🧑‍💻페르소나
+<img width="859" height="457" alt="image" src="https://github.com/user-attachments/assets/4c07abe1-7a36-4b6e-94c9-366060759cb3" />
+      
+## ✅해결책
+<img width="867" height="437" alt="image" src="https://github.com/user-attachments/assets/3e661dc9-c874-48a5-880f-f46e92ed6d68" />
+
+## ⚙️핵심 기능
+<img width="844" height="418" alt="image" src="https://github.com/user-attachments/assets/b4a35978-bf89-46f0-9287-800ec8d2471a" />
+
+
+# 프로젝트 컨벤션 가이드
 <br>
 
 ## 🌿 브랜치 전략
